@@ -8,10 +8,15 @@ use yii\web\Response;
 class SiteController extends Controller
 {
     /**
-     * @return Response
+     * {@inheritDoc}
      */
-    public function actionIndex()
+    public function actions()
     {
+        $actions = parent::actions();
+        if (isset($actions[$this->id])) {
+            unset($actions[$this->id]);
+        }
+        return $actions;
     }
 
     /**

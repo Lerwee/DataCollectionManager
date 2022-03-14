@@ -13,6 +13,9 @@ class GeneralController extends Controller
     public function actions()
     {
         $actions = parent::actions();
+        if (isset($actions[$this->id])) {
+            unset($actions[$this->id]);
+        }
         
         $action = basename(Yii::$app->request->pathinfo);
         if (in_array($action, GeneralAction::acceptActions())) {

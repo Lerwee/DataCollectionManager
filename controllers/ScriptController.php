@@ -2,16 +2,20 @@
 
 namespace app\customs\zabbix\controllers;
 
+use app\customs\zabbix\services\actions\ListAction;
+
 class ScriptController extends Controller
 {
     /**
-     * 脚本管理
-     * @return Response
+     * {@inheritDoc}
      */
-    public function actionList()
+    public function actions()
     {
-        $_GET['action'] = "{$this->id}.{$this->action->id}";
-        $_GET['fullscreen'] = 1;
-        return $this->renderNormal(['file' => 'zabbix']);
+        $actions = parent::actions();
+        if (isset($actions[$this->id])) {
+            unset($actions[$this->id]);
+        }
+        $actions['list'] = ListAction::class;
+        return $actions;
     }
 }

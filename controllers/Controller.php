@@ -6,6 +6,7 @@ use app\common\base\BaseController;
 use app\customs\zabbix\components\Hacker;
 use app\customs\zabbix\services\actions\JsLoader;
 use app\customs\zabbix\services\actions\JsRpc;
+use app\customs\zabbix\services\actions\RepeatAction;
 use Yii;
 use yii\web\Response;
 
@@ -26,6 +27,7 @@ class Controller extends BaseController
     {
         Yii::$app->response->format = Response::FORMAT_HTML;
         $this->hackerZabbix();
+        $this->restfulActions[$this->id] = ['POST', 'GET'];
         return parent::beforeAction($action);
     }
 
@@ -37,6 +39,7 @@ class Controller extends BaseController
         return [
             'jsLoader' => JsLoader::class,
             'jsrpc' => JsRpc::class,
+            $this->id => RepeatAction::class
         ];
     }
     
