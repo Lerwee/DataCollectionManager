@@ -21,13 +21,20 @@ class Controller extends BaseController
     ];
 
     /**
+     * @var bool enable loader js
+     */
+    public $enableLoader = true;
+
+    /**
      * {@inheritdoc}
      */
     public function beforeAction($action)
     {
-        Yii::$app->response->format = Response::FORMAT_HTML;
-        $this->hackerZabbix();
-        $this->restfulActions[$this->id] = ['POST', 'GET'];
+        if ($this->id != 'site') {
+            Yii::$app->response->format = Response::FORMAT_HTML;
+            $this->hackerZabbix();
+            $this->restfulActions[$this->id] = ['POST', 'GET'];
+        }
         return parent::beforeAction($action);
     }
 
@@ -36,11 +43,14 @@ class Controller extends BaseController
      */
     public function actions()
     {
-        return [
-            'jsLoader' => JsLoader::class,
-            'jsrpc' => JsRpc::class,
+        $actions = [
             $this->id => RepeatAction::class
         ];
+        if ($this->enableLoader) {
+            $actions['jsLoader'] = JsLoader::class;
+            $actions['jsrpc'] = JsRpc::class;
+        }
+        return $actions;
     }
     
     /**

@@ -20,8 +20,9 @@ class GeneralController extends Controller
         $action = basename(Yii::$app->request->pathinfo);
         if (in_array($action, GeneralAction::acceptActions())) {
             $actions[$action]['class'] = GeneralAction::class;
+        } else {
+            $actions['gui.edit'] = GeneralAction::class;
         }
-
         return $actions;
     }
 }

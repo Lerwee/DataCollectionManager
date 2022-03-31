@@ -33,7 +33,13 @@ class AssetSyncer extends BaseObject
         ];
         $cmd = IS_WIN ? 'xcopy  "%s" "%s" /e /i /Y' : 'ln -s %s %s 2>&1';
 
-        $zbxPath = \Yii::getAlias('@app') . DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPARATOR . 'zabbix';
+        if ($module = \app\models\Module::findByName('zabbix')) {
+            $alias = $module->getRouteAlias();
+        } else {
+            $alias = 'zbx';
+        }
+
+        $zbxPath = \Yii::getAlias('@app') . DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPARATOR . $alias;
         @exec(IS_WIN ? 'rd /S /Q ' . $zbxPath : 'rm -rf ' . $zbxPath);
         @mkdir($zbxPath);
 
