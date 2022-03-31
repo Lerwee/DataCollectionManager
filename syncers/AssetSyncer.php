@@ -79,7 +79,7 @@ class AssetSyncer extends BaseObject
 
         $src = $source . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'img';
         if (file_exists($src)) {
-            $dest = Yii::getAlias('@app/web/zbx/img');
+            $dest = Yii::getAlias('@app/web/' . $alias . '/img');
             $c    = sprintf($cmd, $src, $dest);
             $this->info($c, $output, $code);
             $output = [];
