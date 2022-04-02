@@ -11,6 +11,11 @@ class SiteController extends Controller
     /**
      * {@inheritDoc}
      */
+    public $enableHacker = true;
+
+    /**
+     * {@inheritDoc}
+     */
     public function actions()
     {
         $actions = parent::actions();

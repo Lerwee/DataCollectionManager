@@ -26,11 +26,21 @@ class Controller extends BaseController
     public $enableLoader = true;
 
     /**
+     * @var array default `$_GET` params
+     */
+    public $getParams = [];
+
+    /**
+     * @var bool hacker to zabbix
+     */
+    public $enableHacker = true;
+
+    /**
      * {@inheritdoc}
      */
     public function beforeAction($action)
     {
-        if ($this->id != 'site') {
+        if ($this->enableHacker) {
             Yii::$app->response->format = Response::FORMAT_HTML;
             $this->hackerZabbix();
             $this->restfulActions[$this->id] = ['POST', 'GET'];

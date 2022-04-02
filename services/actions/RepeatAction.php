@@ -17,6 +17,11 @@ class RepeatAction extends Action
      */
     public function run()
     {
+        if ($this->controller->hasProperty('getParams') && ($getParams = $this->controller->getParams)) {
+            foreach ($getParams as $property => $value) {
+                $_GET[$property] = $value;
+            }
+        }
         return $this->controller->render('/common/normal', [
             'file' => $this->controller->id
         ]);
