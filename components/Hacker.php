@@ -26,13 +26,18 @@ class Hacker extends Component
             require_once rtrim($z, './\\') . '/include/classes/api/CApiService.php';
             require_once rtrim($z, './\\') . '/include/classes/api/services/CUser.php';
         }
-        $user['userid']     = $data['userid'];
-        $user['debug_mode'] = false;
+
         $lang = empty($data['lang']) ? Yii::$app->language : $data['lang'];
-        $user['lang']       = str_replace('-', '_', $lang);
-        $user['type']       = empty($data['type']) ? 3 : $data['type'];
-        $user['gui_access'] = 0; //GROUP_GUI_ACCESS_SYSTEM
-        $user['sessionid']  = static::getZBXSession();
+        $lang = str_replace('-', '_', $lang);
+        $type = empty($data['type']) ? 3 : $data['type'];
+
+        $user = array_merge($data, [
+            'debug_mode' => false,
+            'lang' => $lang,
+            'type' => $type,
+            'gui_access' => 0, // GROUP_GUI_ACCESS_SYSTEM
+            'sessionid' => static::getZBXSession()
+        ]);
 
         /**
          * see  z/include/classes/user/CWebUser.php #92 checkAuthentication
