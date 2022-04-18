@@ -163,25 +163,30 @@ class SysinfoService extends BaseService
             return $status;
         }
 
-        if (empty($status)) {
-            return [];
-        }
-
         $data = [
             'is_running'                => $server->isRunning,
             'has_status'                => (bool) $status,
+            'items_count'               => 0,
             'items_count_monitored'     => 0,
             'items_count_disabled'      => 0,
             'items_count_not_supported' => 0,
+            'hosts_count'               => 0,
             'hosts_count_monitored'     => 0,
             'hosts_count_not_monitored' => 0,
             'hosts_count_template'      => 0,
+            'triggers_count'            => 0,
+            'triggers_count_enabled'    => 0,
             'triggers_count_disabled'   => 0,
             'triggers_count_off'        => 0,
             'triggers_count_on'         => 0,
             'users_count'               => 0,
             'users_online'              => 0,
+            'vps_total'                 => 0,
         ];
+
+        if (empty($status)) {
+            return $data;
+        }
 
         // hosts
         foreach ($status['template stats'] as $stats) {
