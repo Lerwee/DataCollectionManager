@@ -12,7 +12,7 @@ class SysinfoService extends BaseService
 {
     /**
      * delegate
-     * @return Result
+     * @return array
      */
     public function delegate()
     {
