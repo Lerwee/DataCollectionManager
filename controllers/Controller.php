@@ -75,6 +75,8 @@ class Controller extends BaseController
                 $actions = [
                     $action => ReuseAction::class
                 ];
+            } else {
+                $actions = [];
             }
         }
         
