@@ -28,4 +28,9 @@ class HostsController extends Controller
         'chart6',
         'chart7',
     ];
+
+    /**
+     * {@inheritDoc}
+     */
+    public $defaultAction = 'hosts';
 }

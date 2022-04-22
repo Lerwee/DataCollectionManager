@@ -8,10 +8,7 @@ use yii\web\Response;
 class DiscoveryconfController extends Controller
 {
     /**
-     * @return Response
+     * {@inheritDoc}
      */
-    public function actionDiscoveryconf()
-    {
-        return $this->renderNormal(['file' => $this->id]);
-    }
+    public $defaultAction = 'discoveryconf';
 }

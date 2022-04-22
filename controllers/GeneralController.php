@@ -25,4 +25,9 @@ class GeneralController extends Controller
         }
         return $actions;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public $defaultAction = 'gui.edit';
 }

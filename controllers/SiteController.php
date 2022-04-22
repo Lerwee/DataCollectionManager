@@ -52,13 +52,7 @@ class SiteController extends Controller
         }
         $class = new $controllerClass($alias, $this->module);
         $class->enableLoader = false;
-        $action = current(array_keys($class->actions()));
-
-        $url = '/'. $this->module->id . '/' . $alias;
-        if ($action) {
-            $url .= '/'. $action;
-        }
-
+        $url = '/'. $this->module->id . '/' . $alias . '/' . $class->defaultAction;
         return $this->success([
             'alias' => $alias,
             'title' => Yii::t($this->module->id, ucfirst($alias)),
