@@ -7,6 +7,7 @@ use app\customs\zabbix\components\Hacker;
 use app\customs\zabbix\services\actions\JsLoader;
 use app\customs\zabbix\services\actions\JsRpc;
 use app\customs\zabbix\services\actions\RepeatAction;
+use app\customs\zabbix\services\actions\ReuseAction;
 use Yii;
 use yii\web\Response;
 
@@ -31,6 +32,11 @@ class Controller extends BaseController
     public $getParams = [];
 
     /**
+     * @var array allow actions
+     */
+    public $allowedActions = [];
+
+    /**
      * @var bool hacker to zabbix
      */
     public $enableHacker = true;
@@ -53,9 +59,25 @@ class Controller extends BaseController
      */
     public function actions()
     {
-        $actions = [
-            $this->id => RepeatAction::class
-        ];
+        $buf = explode("/", Yii::$app->requestedRoute);
+        $action = end($buf);
+        if ($action == $this->id) {
+            $actions = [
+                $this->id => RepeatAction::class
+            ];
+        } else {
+            $class = 'app\\customs\\zabbix\\services\\actions\\' . ucfirst($action) . 'Action';
+            if (class_exists($class)) {
+                $actions = [
+                    $action => $class
+                ];
+            } elseif (in_array($action, $this->allowedActions)) {
+                $actions = [
+                    $action => ReuseAction::class
+                ];
+            }
+        }
+        
         if ($this->enableLoader) {
             $actions['jsLoader'] = JsLoader::class;
             $actions['jsrpc'] = JsRpc::class;
