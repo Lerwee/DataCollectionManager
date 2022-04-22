@@ -10,4 +10,9 @@ class ActionconfController extends Controller
     public $getParams = [
         'eventsource' => 2
     ];
+
+    /**
+     * {@inheritDoc}
+     */
+    public $defaultAction = 'actionconf';
 }
