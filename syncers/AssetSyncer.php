@@ -3,9 +3,14 @@
 namespace app\customs\zabbix\syncers;
 
 use app\common\traits\LoggerTrait;
+use FilesystemIterator;
+use RegexIterator;
 use Yii;
 use yii\base\BaseObject;
 
+/**
+ * zabbix UI资源文件软连
+ */
 class AssetSyncer extends BaseObject
 {
     use LoggerTrait;
@@ -31,7 +36,7 @@ class AssetSyncer extends BaseObject
         $dirs = [
             'fonts', 'images', 'img', 'js', 'styles', 'assets',
         ];
-        $cmd = IS_WIN ? 'xcopy  "%s" "%s" /e /i /Y' : 'ln -s %s %s 2>&1';
+        $cmd = !IS_LINUX ? 'xcopy  "%s" "%s" /e /i /Y' : 'ln -s %s %s 2>&1';
 
         if ($module = \app\models\Module::findByName('zabbix')) {
             $alias = $module->getRouteAlias();
@@ -40,7 +45,9 @@ class AssetSyncer extends BaseObject
         }
 
         $zbxPath = \Yii::getAlias('@app') . DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPARATOR . $alias;
-        @exec(IS_WIN ? 'rd /S /Q ' . $zbxPath : 'rm -rf ' . $zbxPath);
+        $fontPath = \Yii::getAlias('@app') . DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'fonts';
+        @exec(!IS_LINUX ? 'rd /S /Q ' . $zbxPath : 'rm -rf ' . $zbxPath);
+        @exec(!IS_LINUX ? 'rd /S /Q ' . $zbxPath : 'rm -rf ' . $fontPath);
         @mkdir($zbxPath);
 
         $src = config('zabbix_source', 'z');
@@ -57,7 +64,7 @@ class AssetSyncer extends BaseObject
                 $src = $source . DIRECTORY_SEPARATOR . $dir;
                 if (file_exists($src)) {
                     $dest = $destination . DIRECTORY_SEPARATOR . $dir;
-                    $c    = sprintf($cmd, $src, $dest);
+                    $c = sprintf($cmd, $src, $dest);
                     $this->info($c);
                     exec($c, $output, $code);
                     $code != 0 && $this->warning(current($output));
@@ -70,7 +77,7 @@ class AssetSyncer extends BaseObject
         $src = $source . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'fonts';
         if (file_exists($src)) {
             $dest = Yii::getAlias('@app/web/assets/fonts');
-            $c    = sprintf($cmd, $src, $dest);
+            $c = sprintf($cmd, $src, $dest);
             $this->info($c);
             $output = [];
             exec($c, $output, $code);
@@ -80,14 +87,14 @@ class AssetSyncer extends BaseObject
         $src = $source . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'img';
         if (file_exists($src)) {
             $dest = Yii::getAlias('@app/web/' . $alias . '/img');
-            $c    = sprintf($cmd, $src, $dest);
-            $this->info($c, $output, $code);
+            $c = sprintf($cmd, $src, $dest);
+            $this->info($c);
             $output = [];
             exec($c, $output, $code);
             $code != 0 && $this->warning(current($output));
         }
 
-        $user  = env('FILE_USER', 'itpos');
+        $user = env('FILE_USER', 'itpos');
         $group = env('FILE_GROUP', 'itpos');
 
         $command = "chown -R  $user:$group " . $zbxPath;
@@ -115,10 +122,10 @@ class AssetSyncer extends BaseObject
         $controllerPath = Yii::getAlias('@' . str_replace('\\', '/', $controllerNamespace));
         if (is_dir($controllerPath)) {
             $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($controllerPath, \RecursiveDirectoryIterator::KEY_AS_PATHNAME)
+                new \RecursiveDirectoryIterator($controllerPath, FilesystemIterator::KEY_AS_PATHNAME)
             );
-            $iterator = new \RegexIterator($iterator, '/.*Controller\.php$/', \RecursiveRegexIterator::GET_MATCH);
-            
+            $iterator = new \RegexIterator($iterator, '/.*Controller\.php$/', RegexIterator::GET_MATCH);
+
             foreach ($iterator as $matches) {
                 $file = $matches[0];
                 $relativePath = str_replace($controllerPath, '', $file);
@@ -132,7 +139,7 @@ class AssetSyncer extends BaseObject
                 }
 
                 $controllerClass = $controllerNamespace . $class;
-                
+
                 if ($this->validateControllerClass($controllerClass)) {
                     $dir = ltrim(pathinfo($relativePath, PATHINFO_DIRNAME), '\\/');
 
