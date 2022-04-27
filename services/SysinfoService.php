@@ -136,7 +136,11 @@ class SysinfoService extends BaseService
             'label'  => Yii::t($category, 'Zabbix Server'),
             'value'  => $server->port ? $server->host . ':' . $server->port : $server->host,
             'status' => $server->isRunning,
-            'version' => ZabbixHelper::getVersion(false),
+            'version' => [
+                'label' => Yii::t($category, 'Version'),
+                'value' => 'V' . ZabbixHelper::getVersion(false),
+            ],
+
         ];
     }
 
