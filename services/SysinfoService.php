@@ -3,7 +3,7 @@
 namespace app\customs\zabbix\services;
 
 use app\common\base\BaseService;
-use app\common\components\Result;
+use app\common\helpers\ZabbixHelper;
 use app\modules\libzbx\components\ZabbixServer;
 use app\modules\libzbx\models\Classification;
 use Yii;
@@ -39,20 +39,21 @@ class SysinfoService extends BaseService
      */
     protected function prepareHostSummary($summary)
     {
+        $category = $this->module->id ?? 'zbx';
         return [
-            'label'    => Yii::t('zabbix', 'Host'),
+            'label'    => Yii::t($category, 'Host'),
             'value'    => $summary['hosts_count'],
             'status'   => [
                 [
-                    'label' => Yii::t('zabbix', 'enabled'),
+                    'label' => Yii::t($category, 'enabled'),
                     'value' => $summary['hosts_count_monitored'],
                 ],
                 [
-                    'label' => Yii::t('zabbix', 'disabled'),
+                    'label' => Yii::t($category, 'disabled'),
                     'value' => $summary['hosts_count_not_monitored'],
                 ],
                 [
-                    'label' => Yii::t('zabbix', 'Template'),
+                    'label' => Yii::t($category, 'Template'),
                     'value' => $summary['hosts_count_template'],
                 ],
             ],
@@ -67,20 +68,21 @@ class SysinfoService extends BaseService
      */
     protected function prepareItemSummary($summary)
     {
+        $category = $this->module->id ?? 'zbx';
         return [
-            'label'  => Yii::t('zabbix', 'Number of items'),
+            'label'  => Yii::t($category, 'Number of items'),
             'value'  => $summary['items_count'],
             'status' => [
                 [
-                    'label' => Yii::t('zabbix', 'enabled'),
+                    'label' => Yii::t($category, 'enabled'),
                     'value' => $summary['items_count_monitored'],
                 ],
                 [
-                    'label' => Yii::t('zabbix', 'disabled'),
+                    'label' => Yii::t($category, 'disabled'),
                     'value' => $summary['items_count_disabled'],
                 ],
                 [
-                    'label' => Yii::t('zabbix', '不支持'),
+                    'label' => Yii::t($category, 'not supported'),
                     'value' => $summary['items_count_not_supported'],
                 ],
             ],
@@ -94,26 +96,27 @@ class SysinfoService extends BaseService
      */
     protected function prepareTriggerSummary($summary)
     {
+        $category = $this->module->id ?? 'zbx';
         return [
-            'label'  => Yii::t('zabbix', 'Number of triggers'),
+            'label'  => Yii::t($category, 'Number of triggers'),
             'value'  => $summary['triggers_count'],
             'status' => [
                 [
-                    'label' => Yii::t('zabbix', 'disabled'),
+                    'label' => Yii::t($category, 'disabled'),
                     'value' => $summary['triggers_count_enabled'],
                 ],
                 [
-                    'label' => Yii::t('zabbix', 'enabled'),
+                    'label' => Yii::t($category, 'enabled'),
                     'value' => $summary['triggers_count_disabled'],
                 ],
             ],
             'state'  => [
                 [
-                    'label' => Yii::t('zabbix', 'problem'),
+                    'label' => Yii::t($category, 'problem'),
                     'value' => $summary['triggers_count_on'],
                 ],
                 [
-                    'label' => Yii::t('zabbix', 'ok'),
+                    'label' => Yii::t($category, 'ok'),
                     'value' => $summary['triggers_count_off'],
                 ],
             ],
@@ -128,10 +131,12 @@ class SysinfoService extends BaseService
      */
     protected function prepareServerSummary(ZabbixServer $server)
     {
+        $category = $this->module->id ?? 'zbx';
         return [
-            'label'  => Yii::t('zabbix', 'Zabbix Server'),
+            'label'  => Yii::t($category, 'Zabbix Server'),
             'value'  => $server->port ? $server->host . ':' . $server->port : $server->host,
             'status' => $server->isRunning,
+            'version' => ZabbixHelper::getVersion(false),
         ];
     }
 
@@ -143,8 +148,9 @@ class SysinfoService extends BaseService
      */
     protected function prepareLatestSummary($summary)
     {
+        $category = $this->module->id ?? 'zbx';
         return [
-            'label' => Yii::t('zabbix', 'Required server performance, new values per second'),
+            'label' => Yii::t($category, 'Required server performance, new values per second'),
             'value' => round($summary['vps_total'], 2),
         ];
     }
