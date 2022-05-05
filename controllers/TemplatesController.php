@@ -23,5 +23,14 @@ class TemplatesController extends Controller
         'host_prototypes', // 主机模板
         'trigger_prototypes', // 触发器类型
         'httpconf', // Web监测
+        'screenconf', // 聚合图形
+        'screenedit', // 配置聚合图形
+        'chart',
+        'chart2',
+        'chart3',
+        'chart4',
+        'chart5',
+        'chart6',
+        'chart7',
     ];
 }

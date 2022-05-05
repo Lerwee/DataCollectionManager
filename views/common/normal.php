@@ -12,17 +12,17 @@ if ('adm.valuemapping' == $file) {
 //see lwjk_v3\web\z\include\func.inc.php #2205 uncheckTableRows
 $_SERVER['SCRIPT_NAME'] = "/z/$file.php";
 
-echo "<!DOCTYPE html>";
 
 // 解决5.0使用js移除左侧菜单栏会导致闪烁问题
 if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
     if (strncmp($_SERVER['SCRIPT_NAME'], '/z/chart', 8) != 0 && \app\common\helpers\ZabbixHelper::getVersion(true) < 5.4) {
         $css = <<<css
-    <style type="text/css">
-        .sidebar {
-            display:none !important;
-        }
-    </style>
+<!DOCTYPE html>
+<style type="text/css">
+    .sidebar {
+        display:none !important;
+    }
+</style>
 css;
         echo $css;
     }
