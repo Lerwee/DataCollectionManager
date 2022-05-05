@@ -71,10 +71,12 @@ class Controller extends BaseController
                 $actions = [
                     $action => $class
                 ];
+                $this->restfulActions[$action] = ['POST', 'GET'];
             } elseif (in_array($action, $this->allowedActions)) {
                 $actions = [
                     $action => ReuseAction::class
                 ];
+                $this->restfulActions[$action] = ['POST', 'GET'];
             } else {
                 $actions = [];
             }
