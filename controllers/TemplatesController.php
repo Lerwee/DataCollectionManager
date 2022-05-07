@@ -14,6 +14,7 @@ class TemplatesController extends Controller
      */
     public $allowedActions = [
         'applications', // 应用集
+        'hosts', // 主机
         'items', // 监控项
         'triggers', // 触发器
         'graphs', // 图形
