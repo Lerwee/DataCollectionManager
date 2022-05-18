@@ -26,6 +26,7 @@ class TemplatesController extends Controller
         'httpconf', // Web监测
         'screenconf', // 聚合图形
         'screenedit', // 配置聚合图形
+        'conf.import', // 导入
         'chart',
         'chart2',
         'chart3',
