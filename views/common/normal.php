@@ -27,5 +27,4 @@ css;
         echo $css;
     }
 }
-\Yii::getAlias($alias, $throwException = true);
 require_once "$file.php";
