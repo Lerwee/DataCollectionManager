@@ -99,6 +99,15 @@ class Controller extends BaseController
     }
 
     /**
+     * 图片地址
+     */
+    public function actionImgstore()
+    {
+        #Yii::$app->response->getHeaders()->set('Content-Type', 'image/png');
+        return $this->renderNormal();
+    }
+
+    /**
      * 标准视图
      *
      * @param array $params

@@ -14,8 +14,8 @@ $_SERVER['SCRIPT_NAME'] = "/z/$file.php";
 
 
 // 解决5.0使用js移除左侧菜单栏会导致闪烁问题
-if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
-    if (strncmp($_SERVER['SCRIPT_NAME'], '/z/chart', 8) != 0 && \app\common\helpers\ZabbixHelper::getVersion(true) < 5.4) {
+if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strncasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'XMLHttpRequest', 14) !== 0) {
+    if ($file != 'imgstore' && strncmp($_SERVER['SCRIPT_NAME'], '/z/chart', 8) != 0 && \app\common\helpers\ZabbixHelper::getVersion(true) < 5.4) {
         $css = <<<css
 <!DOCTYPE html>
 <style type="text/css">
@@ -27,5 +27,5 @@ css;
         echo $css;
     }
 }
-
+\Yii::getAlias($alias, $throwException = true);
 require_once "$file.php";
