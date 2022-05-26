@@ -20,6 +20,7 @@ class HostsController extends Controller
         'host_prototypes', // 主机模板
         'trigger_prototypes', // 触发器类型
         'httpconf', // Web监测
+        'conf.import', // 导入
         'chart',
         'chart2',
         'chart3',
