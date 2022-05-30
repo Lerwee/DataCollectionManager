@@ -81,14 +81,14 @@ class Controller extends BaseController
                 $actions = [];
             }
         }
-        
+
         if ($this->enableLoader) {
             $actions['jsLoader'] = JsLoader::class;
             $actions['jsrpc'] = JsRpc::class;
         }
         return $actions;
     }
-    
+
     /**
      * 兼容zabbix 4.X
      * 该文件从4.0开始引入
@@ -126,10 +126,21 @@ class Controller extends BaseController
      */
     public function hackerZabbix()
     {
-        // TODO: 取登录用户
+        if (Yii::$app->user->isGuest) {
+            $token = isset($_COOKIE['_token']) ? $_COOKIE['_token'] : null;
+            if ($token) {
+                $user = \app\models\User::findIdentityByAccessToken($token);
+                $userId = $user ? $user->getId() : 1;
+            } else {
+                $userId = 1;
+            }
+        } else {
+            $userId = Yii::$app->user->getId();
+        }
+
         $data = \Yii::$app->db->createCommand('SELECT * FROM users WHERE userid=:userid LIMIT 1')
-                ->bindValue(':userid', \Yii::$app->user->getId() ? : 1)
-                ->queryOne();
+            ->bindValue(':userid', $userId)
+            ->queryOne();
         Hacker::login($data);
 
         global $page;
