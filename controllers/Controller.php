@@ -3,6 +3,7 @@
 namespace app\customs\zabbix\controllers;
 
 use app\common\base\BaseController;
+use app\models\User;
 use app\customs\zabbix\components\Hacker;
 use app\customs\zabbix\services\actions\JsLoader;
 use app\customs\zabbix\services\actions\JsRpc;
@@ -40,6 +41,33 @@ class Controller extends BaseController
      * @var bool hacker to zabbix
      */
     public $enableHacker = true;
+
+    /**
+     * {@inheritDoc}
+     */
+    public function behaviors(): array
+    {
+        $allow = false;
+        $routeA = '/' . $this->module->id . '/' . $this->id . '/' . $this->action->id;
+        $routeB = '/' . $this->module->id . '/' . $this->id . '/*';
+        $routeC = '/' . $this->module->id . '/*';
+        $routes = $this->getAccessRoutes();
+        if (in_array($routeA, $routes) || in_array($routeB, $routes) || in_array($routeC, $routes)) {
+            $allow = true;
+        }
+        return \yii\helpers\ArrayHelper::merge(parent::behaviors(), [
+            'access' => [
+                'class' => \yii\filters\AccessControl::class,
+                'only' => [$this->action->id],
+                'rules' => [
+                    [
+                        'allow' => $allow,
+                        'roles' => ['@'],
+                    ]
+                ]
+            ]
+        ]);
+    }
 
     /**
      * {@inheritdoc}
@@ -128,18 +156,13 @@ class Controller extends BaseController
     {
         if (Yii::$app->user->isGuest) {
             $token = isset($_COOKIE['_token']) ? $_COOKIE['_token'] : null;
-            if ($token) {
-                $user = \app\models\User::findIdentityByAccessToken($token);
-                $userId = $user ? $user->getId() : 1;
-            } else {
-                $userId = 1;
+            if ($token && $user = User::findIdentityByAccessToken($token)) {
+                $user = User::findIdentityByAccessToken($token);
+                Yii::$app->user->login($user);
             }
-        } else {
-            $userId = Yii::$app->user->getId();
         }
-
         $data = \Yii::$app->db->createCommand('SELECT * FROM users WHERE userid=:userid LIMIT 1')
-            ->bindValue(':userid', $userId)
+            ->bindValue(':userid', User::SYSTEM_USER_ID)
             ->queryOne();
         Hacker::login($data);
 
@@ -148,6 +171,38 @@ class Controller extends BaseController
         $page['file'] = $this->action->id;
 
         $page['menu'] = '';
+    }
+
+    /**
+     * 返回可访问的路由
+     *
+     * @return string[]
+     */
+    protected function getAccessRoutes()
+    {
+        /** @var User $user */
+        $user = Yii::$app->user->getIdentity();
+        if (empty($user)) {
+            return ['/zbx/*'];
+        }
+
+        $roles = $user->roles;
+        $roleIds = [];
+        foreach ($roles as $role) {
+            $roleIds[] = $role->id;
+        }
+        $subQuery = \app\modules\auth\models\Rule::find()
+            ->select('id')
+            ->where([
+                'id' => \app\modules\auth\models\db\LwAuthRoleRule::find()
+                    ->select('ruleid')
+                    ->where(['roleid' => $roleIds])
+            ])
+            ->andWhere(['module' => 'zabbix']);
+        $query = \app\modules\auth\models\RuleItem::find()
+            ->select('route')
+            ->where(['ruleid' => $subQuery]);
+        return $query->column();
     }
 
     /**
