@@ -190,7 +190,7 @@ class Controller extends BaseController
     {
         /** @var User $user */
         $user = Yii::$app->user->getIdentity();
-        if (empty($user)) {
+        if (empty($user) || $user->getIsAdministrator()) {
             return ['/zbx/*'];
         }
 
