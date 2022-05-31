@@ -155,7 +155,13 @@ class Controller extends BaseController
     public function hackerZabbix()
     {
         if (Yii::$app->user->isGuest) {
-            $token = isset($_COOKIE['_token']) ? $_COOKIE['_token'] : null;
+            $authHeader = Yii::$app->request->getHeaders()->get('authorization');
+            if ($authHeader && preg_match('/^Bearer\s+(.*?)$/', $authHeader, $matches)) {
+                $token = $matches[1];
+            } else {
+                $token = isset($_COOKIE['_token']) ? $_COOKIE['_token'] : null;
+            }
+
             if ($token && $user = User::findIdentityByAccessToken($token)) {
                 $user = User::findIdentityByAccessToken($token);
                 Yii::$app->user->login($user);
