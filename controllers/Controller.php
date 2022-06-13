@@ -47,6 +47,11 @@ class Controller extends BaseController
      */
     public function behaviors(): array
     {
+        if ($this->enableHacker) {
+            Yii::$app->response->format = Response::FORMAT_HTML;
+            $this->hackerZabbix();
+            $this->restfulActions[$this->id] = ['POST', 'GET'];
+        }
         $routeA = '/' . $this->module->id . '/' . $this->id . '/' . $this->action->id;
         $routeB = '/' . $this->module->id . '/' . $this->id . '/*';
         $routeC = '/' . $this->module->id . '/*';
@@ -69,19 +74,6 @@ class Controller extends BaseController
                 ]
             ]
         ]);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function beforeAction($action)
-    {
-        if ($this->enableHacker) {
-            Yii::$app->response->format = Response::FORMAT_HTML;
-            $this->hackerZabbix();
-            $this->restfulActions[$this->id] = ['POST', 'GET'];
-        }
-        return parent::beforeAction($action);
     }
 
     /**
