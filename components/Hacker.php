@@ -36,7 +36,7 @@ class Hacker extends Component
             'lang' => $lang,
             'type' => $type,
             'gui_access' => 0, // GROUP_GUI_ACCESS_SYSTEM
-            'sessionid' => static::getZBXSession()
+            'sessionid' => static::getZBXSession($data)
         ]);
 
         /**
@@ -53,14 +53,20 @@ class Hacker extends Component
          *
          * 当前路由不操作yii seesion避免出现未定义的问题
          */
-         session_abort();
+        session_abort();
         /**
          * 避免zabbix session_start后与YII的冲突 导致的未定义的问题
          */
         ini_set('session.name', 'z');
     }
 
-    public static function getZBXSession()
+    /**
+     * 返回zbx登录session
+     *
+     * @param mixed $user
+     * @return string
+     */
+    public static function getZBXSession($user)
     {
         /**
          * 兼容zabbix 5.2
@@ -87,7 +93,15 @@ class Hacker extends Component
         }
 
         if (isset($_COOKIE['zbx_sessionid'])) {
-            return $_COOKIE['zbx_sessionid'];
+            $query = (new \yii\db\Query)
+                ->from('sessions')
+                ->where(['sessionid' => $_COOKIE['zbx_sessionid']]);
+            $data = $query->one();
+            if ($data && $data['status'] == 0 && 0 != $user['autologout']) {
+                if (static::toSeconds($user['autologout']) > time()) {
+                    return $_COOKIE['zbx_sessionid'];
+                }
+            }
         }
         $_COOKIE['zbx_sessionid'] = static::getAdminToken();
 
@@ -106,5 +120,45 @@ class Hacker extends Component
             $token = $client->getToken();
         }
         return $token;
+    }
+
+    /**
+     * 兼容3.2,3.4的时间表示
+     *
+     *
+     * @return integer
+     */
+    protected static function toSeconds($time)
+    {
+        if (is_numeric($time)) {
+            return $time;
+        }
+
+        preg_match('/^((\d)+)([smhdw])?$/', $time, $matches);
+
+        if (array_key_exists(3, $matches)) {
+            $suffix = $matches[3];
+            $time   = $matches[1];
+
+            switch ($suffix) {
+                case 's':
+                    $sec = $time;
+                    break;
+                case 'm':
+                    $sec = bcmul($time, 60);
+                    break;
+                case 'h':
+                    $sec = bcmul($time, 3600);
+                    break;
+                case 'd':
+                    $sec = bcmul($time, 86400);
+                    break;
+                case 'w':
+                    $sec = bcmul($time, 7 * 86400);
+                    break;
+            }
+        }
+
+        return $sec;
     }
 }
