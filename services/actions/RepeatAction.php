@@ -2,6 +2,7 @@
 
 namespace app\customs\zabbix\services\actions;
 
+use app\common\helpers\ZabbixHelper;
 use yii\base\Action;
 
 class RepeatAction extends Action
@@ -23,8 +24,21 @@ class RepeatAction extends Action
                 $_GET[$property] = $value;
             }
         }
+
+        $file = $this->controller->id;
+
+        if (6.0 <= ZabbixHelper::getVersion()) {
+            if ($this->id == 'hosts') {
+                $_GET['action'] = "host.list";
+                $file = 'zabbix';
+            } elseif ($this->id == 'discoveryconf') {
+                $_GET['action'] = "discovery.list";
+                $file = 'zabbix';
+            }
+        }
+
         return $this->controller->render('/common/normal', [
-            'file' => $this->controller->id
+            'file' => $file
         ]);
     }
 }

@@ -15,8 +15,10 @@ $_SERVER['SCRIPT_NAME'] = "/z/$file.php";
 
 // 解决5.0使用js移除左侧菜单栏会导致闪烁问题
 if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strncasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'XMLHttpRequest', 14) !== 0) {
-    if ($file != 'imgstore' && strncmp($_SERVER['SCRIPT_NAME'], '/z/chart', 8) != 0 && \app\common\helpers\ZabbixHelper::getVersion(true) < 5.4) {
-        $css = <<<css
+    if ($file != 'imgstore' && strncmp($_SERVER['SCRIPT_NAME'], '/z/chart', 8) != 0) {
+        $zbxVer = \app\common\helpers\ZabbixHelper::getVersion();
+        if ($zbxVer < 5.4) {
+            $css = <<<css
 <!DOCTYPE html>
 <style type="text/css">
     .sidebar {
@@ -24,6 +26,16 @@ if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strncasecmp($_SERVER['HTTP_X_RE
     }
 </style>
 css;
+        } else {
+            $css = <<<css
+<!DOCTYPE html>
+<style type="text/css">
+    .sidebar-nav-toggle {
+        display:none !important;
+    }
+</style>
+css;
+        }
         echo $css;
     }
 }

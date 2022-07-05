@@ -71,25 +71,13 @@ class Hacker extends Component
         /**
          * 兼容zabbix 5.2
          */
-        if (5.2 <= ZabbixHelper::getVersion()) {
-            if (isset($_COOKIE['zbx_session'])) {
-                /**
-                 * @see z/include/classes/core/CEncryptedCookieSession.php #76 checkSign
-                 */
-                $zbxSession = json_decode(base64_decode($_COOKIE['zbx_session']), true);
-                $_COOKIE['zbx_sessionid'] = $zbxSession['sessionid'];
-            } else {
-                $_COOKIE['zbx_sessionid'] = static::getAdminToken();
-
-                $key = (new \yii\db\Query())->select(['session_key'])->from('config')->scalar();
-
-                $sign = openssl_encrypt(json_encode([
-                    'sessionid' => $_COOKIE['zbx_sessionid']
-                ]), 'aes-256-ecb', $key);
-                $_COOKIE['zbx_session']   = base64_encode(json_encode([
-                    'sessionid' => $_COOKIE['zbx_sessionid'], 'sign' => $sign
-                ]));
-            }
+        $higher = version_compare(5.2, ZabbixHelper::getVersion(), '<=');
+        if ($higher && isset($_COOKIE['zbx_session'])) {
+            /**
+             * @see z/include/classes/core/CEncryptedCookieSession.php #76 checkSign
+             */
+            $zbxSession = json_decode(base64_decode($_COOKIE['zbx_session']), true);
+            $_COOKIE['zbx_sessionid'] = $zbxSession['sessionid'];
         }
 
         if (isset($_COOKIE['zbx_sessionid'])) {
@@ -105,6 +93,26 @@ class Hacker extends Component
         }
         $_COOKIE['zbx_sessionid'] = static::getAdminToken();
 
+        if ($higher) {
+            $key = (new \yii\db\Query())->select(['session_key'])->from('config')->scalar();
+
+            if (version_compare(6.0, ZabbixHelper::getVersion(), '<=')) {
+                if (!$key) {
+                    $key = bin2hex(openssl_random_pseudo_bytes(16));
+                }
+                $sign = hash_hmac('sha256', json_encode(['sessionid' => $_COOKIE['zbx_sessionid']]), $key, false);
+            } else {
+                $sign = openssl_encrypt(json_encode([
+                    'sessionid' => $_COOKIE['zbx_sessionid']
+                ]), 'aes-256-ecb', $key);
+            }
+
+            $_COOKIE['zbx_session']   = base64_encode(json_encode([
+                'sessionid' => $_COOKIE['zbx_sessionid'], 'sign' => $sign
+            ]));
+        }
+
+
         return $_COOKIE['zbx_sessionid'];
     }
 
@@ -114,12 +122,8 @@ class Hacker extends Component
      */
     public static function getAdminToken()
     {
-        static $token;
-        if ($token === null) {
-            $client = new \app\modules\libzbx\api\ZClient();
-            $token = $client->getToken();
-        }
-        return $token;
+        $client = new \app\modules\libzbx\api\ZClient();
+        return $client->getToken();
     }
 
     /**
