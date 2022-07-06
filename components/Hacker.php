@@ -27,13 +27,12 @@ class Hacker extends Component
             require_once rtrim($z, './\\') . '/include/classes/api/services/CUser.php';
         }
 
-        $lang = empty($data['lang']) ? Yii::$app->language : $data['lang'];
-        $lang = str_replace('-', '_', $lang);
+        $lang = str_replace('-', '_', Yii::$app->language);
         $type = empty($data['type']) ? 3 : $data['type'];
 
         $user = array_merge($data, [
             'debug_mode' => false,
-            'lang' => $lang,
+            'lang' => empty($data['lang']) || $data['lang'] != $lang ? $lang : $data['lang'],
             'type' => $type,
             'gui_access' => 0, // GROUP_GUI_ACCESS_SYSTEM
             'sessionid' => static::getZBXSession($data)
