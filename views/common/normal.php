@@ -12,9 +12,9 @@ if ('adm.valuemapping' == $file) {
 //see lwjk_v3\web\z\include\func.inc.php #2205 uncheckTableRows
 $_SERVER['SCRIPT_NAME'] = "/z/$file.php";
 
-
 // 解决5.0使用js移除左侧菜单栏会导致闪烁问题
-if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strncasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'XMLHttpRequest', 14) !== 0) {
+if (!Yii::$app->request->isPost 
+    && (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strncasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'XMLHttpRequest', 14) !== 0)) {
     if ($file != 'imgstore' && strncmp($_SERVER['SCRIPT_NAME'], '/z/chart', 8) != 0) {
         $zbxVer = \app\common\helpers\ZabbixHelper::getVersion();
         if ($zbxVer < 5.4) {

@@ -35,7 +35,8 @@ class Hacker extends Component
             'lang' => empty($data['lang']) || $data['lang'] != $lang ? $lang : $data['lang'],
             'type' => $type,
             'gui_access' => 0, // GROUP_GUI_ACCESS_SYSTEM
-            'sessionid' => static::getZBXSession($data)
+            'sessionid' => static::getZBXSession($data),
+            'userip' => \Yii::$app->request->userIP
         ]);
 
         /**
