@@ -30,6 +30,13 @@ css;
             $css = <<<css
 <!DOCTYPE html>
 <style type="text/css">
+    .sidebar {
+        display: none !important;
+        transform: translate3d(-110%, 0, 0) !important;
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+    }
     .sidebar-nav-toggle {
         display:none !important;
     }
