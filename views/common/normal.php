@@ -5,17 +5,6 @@ define('ZBX_PAGE_FULLSCREEN', true);
 
 chdir(config('zabbix_source', 'z'));
 
-$zbxVer =  \app\common\helpers\ZabbixHelper::getVersion();
-// 6.x侧边栏`sidebar`通过样式隐藏不完整(POST请求页面情况)
-// 此方式关闭会影响zabbix-ui页面
-if (5 <= $zbxVer) {
-    $options = [
-        'value_int' => 2
-    ];
-    \Yii::$app->db->createCommand()
-        ->update('profiles', $options, ['idx' => 'web.sidebar.mode', 'userid' => 1])
-        ->execute();
-}
 
 //fix bugs : Undefined variable: config
 if ('adm.valuemapping' == $file) {
@@ -25,10 +14,7 @@ if ('adm.valuemapping' == $file) {
 $_SERVER['SCRIPT_NAME'] = "/z/$file.php";
 
 // 解决5.0使用js移除左侧菜单栏会导致闪烁问题
-if (
-    !Yii::$app->request->isPost
-    && (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strncasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'XMLHttpRequest', 14) !== 0)
-) {
+if (!Yii::$app->request->isAjax) {
     if ($file != 'imgstore' && strncmp($_SERVER['SCRIPT_NAME'], '/z/chart', 8) != 0) {
         $zbxVer = \app\common\helpers\ZabbixHelper::getVersion();
         if ($zbxVer < 5.4) {
@@ -56,6 +42,9 @@ css;
     }
 </style>
 css;
+            if (Yii::$app->request->isPost && $contentType = Yii::$app->request->headers->get('Content-Type')) {
+                strncasecmp($contentType, 'application/x-www-form-urlencoded', 33) == 0 && $css = '';
+            }
         }
         echo $css;
     }
