@@ -42,8 +42,16 @@ css;
     }
 </style>
 css;
-            if (Yii::$app->request->isPost && $contentType = Yii::$app->request->headers->get('Content-Type')) {
-                strncasecmp($contentType, 'application/x-www-form-urlencoded', 33) == 0 && $css = '';
+            if (Yii::$app->request->isPost) {
+                if ($contentType = Yii::$app->request->headers->get('Content-Type')) {
+                    strncasecmp($contentType, 'application/x-www-form-urlencoded', 33) == 0 && $css = '';
+                }
+                if ($action = Yii::$app->request->get('action')) {
+                    // 针对6.x模板导入弹窗页面
+                    if (strncasecmp($action, 'popup.import', 12) == 0 || Yii::$app->request->get('output') == 'ajax') {
+                        $css = '';
+                    }
+                }
             }
         }
         echo $css;
