@@ -158,8 +158,13 @@ class Controller extends BaseController
 
             if ($token && $user = User::findIdentityByAccessToken($token)) {
                 $user = User::findIdentityByAccessToken($token);
+                Yii::$app->language = $user->lang;
                 Yii::$app->user->login($user);
             }
+        } else {
+            /** @var User $user */
+            $user = Yii::$app->user->identity;
+            Yii::$app->language = $user->lang;
         }
         $data = \Yii::$app->db->createCommand('SELECT * FROM users WHERE userid=:userid LIMIT 1')
             ->bindValue(':userid', User::SYSTEM_USER_ID)
