@@ -24,6 +24,9 @@ if (!Yii::$app->request->isAjax) {
     .sidebar {
         display:none !important;
     }
+    footer {
+        display:none !important;
+    }
 </style>
 css;
         } else {
@@ -38,6 +41,10 @@ css;
         bottom: 0 !important;
     }
     .sidebar-nav-toggle {
+        display:none !important;
+    }
+    
+    footer {
         display:none !important;
     }
 </style>
