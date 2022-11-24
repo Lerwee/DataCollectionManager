@@ -154,6 +154,9 @@ class Controller extends BaseController
                 $token = $matches[1];
             } else {
                 $token = isset($_COOKIE['_token']) ? $_COOKIE['_token'] : null;
+                if(!$token){
+                    $token = isset($_COOKIE['accessToken']) ? $_COOKIE['accessToken'] : null;
+                }
             }
 
             if ($token && $user = User::findIdentityByAccessToken($token)) {
