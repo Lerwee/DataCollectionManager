@@ -9,6 +9,11 @@ use app\customs\zabbix\syncers\AssetSyncer;
 class ZabbixController extends BaseConsoleController
 {
     /**
+     * {@inheritDoc}
+     */
+    public $defaultAction = 'make-asset';
+
+    /**
      * 建立当面模块所需要的静态资源
      *
      * 在WEB目录的zbx文件夹内创建所有zbx模块需要的资源文件
