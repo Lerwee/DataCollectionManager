@@ -34,4 +34,20 @@ class HostsController extends Controller
      * {@inheritDoc}
      */
     public $defaultAction = 'hosts';
+
+    public function behaviors(): array
+    {
+        return \yii\helpers\ArrayHelper::merge(parent::behaviors(), [
+            'access' => [
+                'class' => \yii\filters\AccessControl::class,
+                'only' => ['chart', 'chart2', 'chart3', 'chart4', 'chart5', 'chart6', 'chart7'],
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ]
+                ]
+            ]
+        ]);
+    }
 }
