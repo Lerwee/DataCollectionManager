@@ -37,19 +37,21 @@ class HostsController extends Controller
 
     public function behaviors(): array
     {
-        $behaviors = parent::behaviors();
-        if (empty($behaviors['access'])) {
-            $behaviors['access'] = [
-                'class' => \yii\filters\AccessControl::class,
-                'only' => ['chart', 'chart2', 'chart3', 'chart4', 'chart5', 'chart6', 'chart7'],
-                'rules' => [
-                    [
-                        'allow' => true,
-                        'roles' => ['@'],
+        $allUserAction = ['chart', 'chart2', 'chart3', 'chart4', 'chart5', 'chart6', 'chart7'];
+        if (in_array($this->action->id,$allUserAction)){
+            return \yii\helpers\ArrayHelper::merge(parent::behaviors(), [
+                'access' => [
+                    'class' => \yii\filters\AccessControl::class,
+                    'only' => [$this->action->id],
+                    'rules' => [
+                        [
+                            'allow' => true,
+                            'roles' => ['@'],
+                        ]
                     ]
                 ]
-            ];
+            ]);
         }
-        return $behaviors;
+        return parent::behaviors();
     }
 }
