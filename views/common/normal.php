@@ -49,6 +49,10 @@ css;
     .sidebar-nav-toggle {
         display:none !important;
     }
+
+    .sidebar.is-compact + .wrapper {
+        margin-left: 0px !important;
+    }
     
     footer {
         visibility:hidden !important;
