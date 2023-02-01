@@ -28,6 +28,8 @@ if (!Yii::$app->request->isAjax) {
     }
     footer {
         visibility:hidden !important;
+        padding: 0 !important;
+        line-height: 0 !important;
     }
 
     header .header-controls ul li:first-child {
@@ -56,6 +58,8 @@ css;
     
     footer {
         visibility:hidden !important;
+        padding: 0 !important;
+        line-height: 0 !important;
     }
 
     header .header-controls ul li:first-child {
