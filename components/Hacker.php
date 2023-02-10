@@ -72,48 +72,77 @@ class Hacker extends Component
          * 兼容zabbix 5.2
          */
         $higher = version_compare(5.2, ZabbixHelper::getVersion(), '<=');
-        if ($higher && isset($_COOKIE['zbx_session'])) {
-            /**
-             * @see z/include/classes/core/CEncryptedCookieSession.php #76 checkSign
-             */
-            $zbxSession = json_decode(base64_decode($_COOKIE['zbx_session']), true);
-            $_COOKIE['zbx_sessionid'] = $zbxSession['sessionid'];
+        if ($higher) {
+            $renew = false;
+            if (isset($_COOKIE['zbx_session'])) {
+                /**
+                 * @see z/include/classes/core/CEncryptedCookieSession.php #76 checkSign
+                 */
+                $zbxSession = json_decode(base64_decode($_COOKIE['zbx_session']), true);
+                $sessionid = $zbxSession['sessionid'];
+            } else {
+                $sessionid = static::getAdminToken();
+            }
+
+            if ($sid = Yii::$app->request->post('sid', Yii::$app->request->get('sid'))) {
+                $query = (new \yii\db\Query);
+                $query->from('sessions')
+                    ->where(['LIKE', 'sessionid', '%' . $sid, false]);
+                $data = $query->one();
+                if ($data && $data['status'] == 0) {
+                    $sid = $data['sessionid'];
+                } else {
+                    $sid = null;
+                }
+            }
+            if (!$sid) {
+                $renew = true;
+                $sid = static::getAdminToken();
+            }
+            if ($sessionid != $sid || $renew) {
+                static::renewSessionKey($sid);
+            }
+            return $sessionid;
         }
 
         if (isset($_COOKIE['zbx_sessionid'])) {
             $query = (new \yii\db\Query)
                 ->from('sessions')
                 ->where(['sessionid' => $_COOKIE['zbx_sessionid']]);
+            
+            if ($user['autologout'] != 0) {
+                $lastaccess = static::toSeconds($user->autologout) + time();
+                $query->andWhere(['>', 'lastaccess', $lastaccess]);
+            }
+
             $data = $query->one();
             if ($data && $data['status'] == 0 && 0 != $user['autologout']) {
-                if (static::toSeconds($user['autologout']) > time()) {
-                    return $_COOKIE['zbx_sessionid'];
-                }
+                return $_COOKIE['zbx_sessionid'];
             }
         }
+        
         $_COOKIE['zbx_sessionid'] = static::getAdminToken();
+        return $_COOKIE['zbx_sessionid'];
+    }
 
-        if ($higher) {
-            $key = (new \yii\db\Query())->select(['session_key'])->from('config')->scalar();
-
-            if (version_compare(6.0, ZabbixHelper::getVersion(), '<=')) {
-                if (!$key) {
-                    $key = bin2hex(openssl_random_pseudo_bytes(16));
-                }
-                $sign = hash_hmac('sha256', json_encode(['sessionid' => $_COOKIE['zbx_sessionid']]), $key, false);
-            } else {
-                $sign = openssl_encrypt(json_encode([
-                    'sessionid' => $_COOKIE['zbx_sessionid']
-                ]), 'aes-256-ecb', $key);
+    public static function renewSessionKey(string $sessionid)
+    {
+        $key = (new \yii\db\Query())->select(['session_key'])->from('config')->scalar();
+        if (version_compare(6.0, ZabbixHelper::getVersion(), '<=')) {
+            if (!$key) {
+                $key = bin2hex(openssl_random_pseudo_bytes(16));
             }
-
-            $_COOKIE['zbx_session']   = base64_encode(json_encode([
-                'sessionid' => $_COOKIE['zbx_sessionid'], 'sign' => $sign
-            ]));
+            $sign = hash_hmac('sha256', json_encode(['sessionid' => $sessionid]), $key, false);
+        } else {
+            $sign = openssl_encrypt(json_encode([
+                'sessionid' => $sessionid
+            ]), 'aes-256-ecb', $key);
         }
 
-
-        return $_COOKIE['zbx_sessionid'];
+        $_COOKIE['zbx_session'] = base64_encode(json_encode([
+            'sessionid' => $sessionid, 'sign' => $sign
+        ]));
+        return $sessionid;
     }
 
     /**

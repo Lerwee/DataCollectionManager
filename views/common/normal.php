@@ -17,7 +17,8 @@ $_SERVER['SCRIPT_NAME'] = "/z/$file.php";
 if (!Yii::$app->request->isAjax) {
     if ($file != 'imgstore' && strncmp($_SERVER['SCRIPT_NAME'], '/z/chart', 8) != 0) {
         $zbxVer = \app\common\helpers\ZabbixHelper::getVersion();
-        $displayHide = isset($_SERVER['REQUEST_URI']) && $_SERVER['REQUEST_URI'] == '/zbx/hosts/hosts' ? 'display:none !important;' : '';
+        $routes = ['/zbx/hosts/hosts', '/zbx/hosts/hosts.php'];
+        $displayHide = isset($_SERVER['REQUEST_URI']) && in_array(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), $routes) ? 'display:none !important;' : '';
         if ($zbxVer < 5.4) {
             $css = <<<css
 <!DOCTYPE html>
@@ -27,6 +28,8 @@ if (!Yii::$app->request->isAjax) {
     }
     footer {
         visibility:hidden !important;
+        padding: 0 !important;
+        line-height: 0 !important;
     }
 
     header .header-controls ul li:first-child {
@@ -48,9 +51,15 @@ css;
     .sidebar-nav-toggle {
         display:none !important;
     }
+
+    .sidebar.is-compact + .wrapper {
+        margin-left: 0px !important;
+    }
     
     footer {
         visibility:hidden !important;
+        padding: 0 !important;
+        line-height: 0 !important;
     }
 
     header .header-controls ul li:first-child {
