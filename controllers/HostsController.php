@@ -34,4 +34,24 @@ class HostsController extends Controller
      * {@inheritDoc}
      */
     public $defaultAction = 'hosts';
+
+    public function behaviors(): array
+    {
+        $allUserAction = ['chart', 'chart2', 'chart3', 'chart4', 'chart5', 'chart6', 'chart7'];
+
+        $behaviors = parent::behaviors();
+        if (in_array($this->action->id, $allUserAction)) {
+            $behaviors['access'] = [
+                'class' => \yii\filters\AccessControl::class,
+                'only' => [$this->action->id],
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ]
+                ]
+            ];
+        }
+        return $behaviors;
+    }
 }

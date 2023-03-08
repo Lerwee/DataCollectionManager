@@ -34,6 +34,9 @@ class RepeatAction extends Action
             } elseif ($this->id == 'discoveryconf') {
                 $_GET['action'] = "discovery.list";
                 $file = 'zabbix';
+            } elseif ($this->id == 'queue') {
+                $_GET['action'] = "queue.details";
+                $file = 'zabbix';
             }
         }
 
