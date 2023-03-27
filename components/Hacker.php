@@ -100,7 +100,7 @@ class Hacker extends Component
                 $sid = static::getAdminToken();
             }
             if ($sessionid != $sid || $renew) {
-                static::renewSessionKey($sid);
+                return static::renewSessionKey($sid);
             }
             return $sessionid;
         }
