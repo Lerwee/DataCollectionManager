@@ -3,12 +3,13 @@
 namespace app\customs\zabbix\controllers;
 
 use app\common\base\BaseController;
-use app\models\User;
+use app\common\helpers\SqlHelper;
 use app\customs\zabbix\components\Hacker;
 use app\customs\zabbix\services\actions\JsLoader;
 use app\customs\zabbix\services\actions\JsRpc;
 use app\customs\zabbix\services\actions\RepeatAction;
 use app\customs\zabbix\services\actions\ReuseAction;
+use app\models\User;
 use Yii;
 use yii\web\Response;
 
@@ -154,7 +155,7 @@ class Controller extends BaseController
                 $token = $matches[1];
             } else {
                 $token = isset($_COOKIE['_token']) ? $_COOKIE['_token'] : null;
-                if(!$token){
+                if (!$token) {
                     $token = isset($_COOKIE['accessToken']) ? $_COOKIE['accessToken'] : null;
                 }
             }
@@ -195,21 +196,19 @@ class Controller extends BaseController
         }
 
         $roles = $user->roles;
-        $roleIds = [];
+        $rules = [];
         foreach ($roles as $role) {
-            $roleIds[] = $role->id;
+            $rules = array_merge($rules, $role->getPermissionIds());
         }
-        $subQuery = \app\modules\auth\models\Rule::find()
-            ->select('id')
-            ->where([
-                'id' => \app\modules\auth\models\db\LwAuthRoleRule::find()
-                    ->select('ruleid')
-                    ->where(['roleid' => $roleIds])
-            ])
-            ->andWhere(['module' => 'zabbix']);
+        foreach ($rules as $i => $rule) {
+            if (strlen($rule) !== 8) {
+                unset($rules[$i]);
+            }
+        }
+
         $query = \app\modules\auth\models\RuleItem::find()
-            ->select('route')
-            ->where(['ruleid' => $subQuery]);
+            ->select("route")
+            ->where(SqlHelper::whereIn('ruleid', array_unique($rules)));
         return $query->column();
     }
 
