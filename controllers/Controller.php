@@ -53,16 +53,17 @@ class Controller extends BaseController
             $this->hackerZabbix();
             $this->restfulActions[$this->id] = ['POST', 'GET'];
         }
-        $routeA = '/' . $this->module->id . '/' . $this->id . '/' . $this->action->id;
-        $routeB = '/' . $this->module->id . '/' . $this->id . '/*';
-        $routeC = '/' . $this->module->id . '/*';
-        $routes = $this->getAccessRoutes();
-        if (in_array($routeA, $routes) || in_array($routeB, $routes) || in_array($routeC, $routes)) {
-            $allow = true;
-        } else {
-            $allow = false;
-            Yii::$app->response->format = Response::FORMAT_JSON;
-        }
+        // $routeA = '/' . $this->module->id . '/' . $this->id . '/' . $this->action->id;
+        // $routeB = '/' . $this->module->id . '/' . $this->id . '/*';
+        // $routeC = '/' . $this->module->id . '/*';
+        // $routes = $this->getAccessRoutes();
+        // if (in_array($routeA, $routes) || in_array($routeB, $routes) || in_array($routeC, $routes)) {
+        //     $allow = true;
+        // } else {
+        //     $allow = false;
+        //     Yii::$app->response->format = Response::FORMAT_JSON;
+        // }
+        $allow = true;
         return \yii\helpers\ArrayHelper::merge(parent::behaviors(), [
             'access' => [
                 'class' => \yii\filters\AccessControl::class,
