@@ -23,7 +23,7 @@ class SysinfoService extends BaseService
             'hosts' => $this->prepareHostSummary($summary),
             'items' => $this->prepareItemSummary($summary),
             'triggers' => $this->prepareTriggerSummary($summary),
-            'server' => $this->prepareServerSummary($server),
+            'server' => $this->prepareServerSummary($server, $summary),
             'performance' => $this->prepareLatestSummary($summary),
         ];
     }
@@ -127,15 +127,16 @@ class SysinfoService extends BaseService
      * format server data
      *
      * @param ZabbixServer $server
+     * @param array $summary
      * @return array
      */
-    protected function prepareServerSummary(ZabbixServer $server)
+    protected function prepareServerSummary(ZabbixServer $server, $summary)
     {
         $category = $this->module->id ?? 'zbx';
         return [
             'label'  => Yii::t($category, 'Zabbix Server'),
             'value'  => $server->port ? $server->host . ':' . $server->port : $server->host,
-            'status' => $server->isRunning,
+            'status' => !empty($summary['is_running']),
             'version' => [
                 'label' => Yii::t($category, 'Version'),
                 'value' => 'V' . ZabbixHelper::getVersion(false),
@@ -168,13 +169,20 @@ class SysinfoService extends BaseService
      */
     private function getSummary(ZabbixServer $server, $raw = false)
     {
-        $status = $server->getStatus();
+        try {
+            $status = $server->getStatus();
+            $isRunning = $server->isRunning;
+        } catch (\Exception $e) {
+            Yii::error(parse_exception($e));
+            $status = false;
+            $isRunning = false;
+        }
         if ($raw) {
             return $status;
         }
 
         $data = [
-            'is_running'                => $server->isRunning,
+            'is_running'                => $isRunning,
             'has_status'                => (bool) $status,
             'items_count'               => 0,
             'items_count_monitored'     => 0,
@@ -216,7 +224,7 @@ class SysinfoService extends BaseService
             }
         }
         $data['hosts_count'] = $data['hosts_count_monitored'] + $data['hosts_count_not_monitored']
-             + $data['hosts_count_template'];
+            + $data['hosts_count_template'];
 
         // items
         foreach ($status['item stats'] as $stats) {
@@ -243,7 +251,7 @@ class SysinfoService extends BaseService
             }
         }
         $data['items_count'] = $data['items_count_monitored'] + $data['items_count_disabled']
-             + $data['items_count_not_supported'];
+            + $data['items_count_not_supported'];
 
         // triggers
         foreach ($status['trigger stats'] as $stats) {
