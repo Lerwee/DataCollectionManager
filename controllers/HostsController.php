@@ -28,6 +28,7 @@ class HostsController extends Controller
         'chart5',
         'chart6',
         'chart7',
+        'history',
     ];
 
     /**
