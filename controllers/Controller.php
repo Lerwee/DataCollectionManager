@@ -53,6 +53,11 @@ class Controller extends BaseController
             $this->hackerZabbix();
             $this->restfulActions[$this->id] = ['POST', 'GET'];
         }
+
+        if (!config('zabbix.enable_access_authorization', true)) {
+            return parent::behaviors();
+        }
+
         $routeA = '/' . $this->module->id . '/' . $this->id . '/' . $this->action->id;
         $routeB = '/' . $this->module->id . '/' . $this->id . '/*';
         $routeC = '/' . $this->module->id . '/*';
