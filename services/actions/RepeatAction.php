@@ -27,7 +27,8 @@ class RepeatAction extends Action
 
         $file = $this->controller->id;
 
-        if (6.0 <= ZabbixHelper::getVersion()) {
+        $zbxVer = ZabbixHelper::getVersion();
+        if (6.0 <= $zbxVer && $zbxVer < 7.0) {
             if ($this->id == 'hosts') {
                 $_GET['action'] = "host.list";
                 $file = 'zabbix';
@@ -36,6 +37,11 @@ class RepeatAction extends Action
                 $file = 'zabbix';
             } elseif ($this->id == 'queue') {
                 $_GET['action'] = "queue.details";
+                $file = 'zabbix';
+            }
+        } elseif(7.0 <= $zbxVer) {
+            if ($this->id == 'templates') {
+                $_GET['action'] = "template.list";
                 $file = 'zabbix';
             }
         }
