@@ -25,7 +25,7 @@
 项目采用插件化模式分包，使层级结构更清晰合理，同时有效降低耦合度。。
 
 ```
-DataCollectionManager
+Perseus
   |-assets == 前端静态定义
   |-commands == 控制台命令定义
   |-components == 组件包 
