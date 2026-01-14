@@ -1,4 +1,4 @@
-## Perseus采集
+## Perseus
 
 > System Version: `lwops V8`
 
