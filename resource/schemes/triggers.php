@@ -1,0 +1,150 @@
+<?php
+
+return [
+    'key' => 'triggerid',
+    'fields' => [
+        'triggerid' => [
+            'null' => false,
+            'type' => 'id',
+            'length' => 20,
+        ],
+        'expression' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 2048,
+            'default' => '',
+        ],
+        'description' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'url' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 2048,
+            'default' => '',
+        ],
+        'status' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'value' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'priority' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'lastchange' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'comments' => [
+            'null' => false,
+            'type' => 'text',
+            'default' => '',
+        ],
+        'error' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 2048,
+            'default' => '',
+        ],
+        'templateid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'triggers',
+            'ref_field' => 'triggerid',
+        ],
+        'type' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'state' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'flags' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'recovery_mode' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'recovery_expression' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 2048,
+            'default' => '',
+        ],
+        'correlation_mode' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'correlation_tag' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'manual_close' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'opdata' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'discover' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'event_name' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 2048,
+            'default' => '',
+        ],
+        'uuid' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 32,
+            'default' => '',
+        ],
+        'url_name' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 64,
+            'default' => '',
+        ],
+    ],
+];

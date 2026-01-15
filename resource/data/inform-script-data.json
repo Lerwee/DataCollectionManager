@@ -1,0 +1,23 @@
+[
+  {
+    "title": "采集服务器异常通知脚本",
+    "columns": [
+      {
+        "label": "主题",
+        "value": "subject",
+        "type": "string",
+        "remark": ""
+      },
+      {
+        "label": "消息",
+        "value": "message",
+        "type": "string",
+        "remark": ""
+      }
+    ],
+    "example": {
+      "subject": "[紧急事件]监控系统采集服务状态发生异常",
+      "message": "系统采集服务状态出现异常或IP发生切换，请及时排查"
+    }
+  }
+]

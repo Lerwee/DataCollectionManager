@@ -1,0 +1,113 @@
+<?php
+
+return [
+    'key' => 'widget_fieldid',
+    'fields' => [
+        'widget_fieldid' => [
+            'null' => false,
+            'type' => 'id',
+            'length' => 20,
+        ],
+        'widgetid' => [
+            'null' => false,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'widget',
+            'ref_field' => 'widgetid',
+        ],
+        'type' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'name' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'value_int' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'value_str' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'value_groupid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'hstgrp',
+            'ref_field' => 'groupid',
+        ],
+        'value_hostid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'hosts',
+            'ref_field' => 'hostid',
+        ],
+        'value_itemid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'items',
+            'ref_field' => 'itemid',
+        ],
+        'value_graphid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'graphs',
+            'ref_field' => 'graphid',
+        ],
+        'value_sysmapid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'sysmaps',
+            'ref_field' => 'sysmapid',
+        ],
+        'value_serviceid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'services',
+            'ref_field' => 'serviceid',
+        ],
+        'value_slaid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'sla',
+            'ref_field' => 'slaid',
+        ],
+        'value_userid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'users',
+            'ref_field' => 'userid',
+        ],
+        'value_actionid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'actions',
+            'ref_field' => 'actionid',
+        ],
+        'value_mediatypeid' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'media_type',
+            'ref_field' => 'mediatypeid',
+        ],
+    ],
+];

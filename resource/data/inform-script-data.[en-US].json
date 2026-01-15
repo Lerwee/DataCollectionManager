@@ -1,0 +1,23 @@
+[
+  {
+    "title": "Perseus server exception notification script",
+    "columns": [
+      {
+        "label": "Subject",
+        "value": "subject",
+        "type": "string",
+        "remark": ""
+      },
+      {
+        "label": "Message",
+        "value": "message",
+        "type": "string",
+        "remark": ""
+      }
+    ],
+    "example": {
+      "subject": "[Emergency] The monitoring system collection service status is abnormal",
+      "message": "System collection service status is abnormal or IP switching, please check in time"
+    }
+  }
+]

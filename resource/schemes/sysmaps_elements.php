@@ -1,0 +1,125 @@
+<?php
+
+return [
+    'key' => 'selementid',
+    'fields' => [
+        'selementid' => [
+            'null' => false,
+            'type' => 'id',
+            'length' => 20,
+        ],
+        'sysmapid' => [
+            'null' => false,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'sysmaps',
+            'ref_field' => 'sysmapid',
+        ],
+        'elementid' => [
+            'null' => false,
+            'type' => 'id',
+            'length' => 20,
+            'default' => '0',
+        ],
+        'elementtype' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'iconid_off' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'images',
+            'ref_field' => 'imageid',
+        ],
+        'iconid_on' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'images',
+            'ref_field' => 'imageid',
+        ],
+        'label' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 2048,
+            'default' => '',
+        ],
+        'label_location' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '-1',
+        ],
+        'x' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'y' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'iconid_disabled' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'images',
+            'ref_field' => 'imageid',
+        ],
+        'iconid_maintenance' => [
+            'null' => true,
+            'type' => 'id',
+            'length' => 20,
+            'ref_table' => 'images',
+            'ref_field' => 'imageid',
+        ],
+        'elementsubtype' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'areatype' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'width' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '200',
+        ],
+        'height' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '200',
+        ],
+        'viewtype' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'use_iconmap' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '1',
+        ],
+        'evaltype' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+    ],
+];

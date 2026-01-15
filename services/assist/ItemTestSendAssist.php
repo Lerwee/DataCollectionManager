@@ -1,0 +1,530 @@
+<?php
+
+namespace app\customs\zapi\services\assist;
+
+use app\common\components\Result;
+use app\common\helpers\ZabbixHelper;
+use app\customs\zapi\common\exceptions\ValidateException;
+use app\customs\zapi\common\helpers\CArrayHelper;
+use app\customs\zapi\common\helpers\CSettingsHelper;
+use app\customs\zapi\common\helpers\ItemHelper;
+use app\customs\zapi\common\helpers\ValidateHelper;
+use app\customs\zapi\common\helpers\ValueMapHelper;
+use app\customs\zapi\common\parsers\CExpressionParser;
+use app\customs\zapi\common\parsers\CItemKey;
+use app\customs\zapi\common\parsers\CParser;
+use app\customs\zapi\common\parsers\CRelativeTimeParser;
+use app\customs\zapi\common\server\MonitorServer;
+use app\customs\zapi\common\validators\z\CExpressionValidator;
+use app\customs\zapi\common\validators\z\CNewValidator;
+use app\modules\libzbx\components\ZabbixServer;
+use app\modules\libzbx\models\zbx\Sessions;
+use app\modules\libzbx\models\zbx\Valuemap;
+use yii\base\Exception;
+
+class ItemTestSendAssist extends ItemTestAssist
+{
+    /**
+     * Show final result in item test dialog.
+     *
+     * @var bool
+     */
+    protected $show_final_result;
+
+    /**
+     * Use previous value for preprocessing test.
+     *
+     * @var bool
+     */
+    protected $use_prev_value;
+
+    /**
+     * Retrieve value from host.
+     *
+     * @var bool
+     */
+    protected $get_value_from_host;
+
+    /**
+     * Time suffixes supported by Perseus server.
+     *
+     * @var array
+     */
+    protected static $supported_time_suffixes = ['w', 'd', 'h', 'm', 's'];
+
+    /**
+     * @param $params
+     * @return Result
+     */
+    public function testSend($params): Result
+    {
+        try {
+            $this->raw_input = $params;
+            $this->checkInput();
+            if ($this->checkPermissions() !== true) {
+                return $this->error(60750203);
+            }
+            $data = $this->send();
+            return $this->success($data);
+        } catch (ValidateException $e) {
+            return $this->error($e->getErrorCode(), $e->getMessage());
+        } catch (Exception $e) {
+            return $this->error(60750204, $e->getMessage());
+        }
+    }
+
+    protected function checkInput() {
+        $fields = [
+            'authtype'				=> 'in '.implode(',', [PRS_HTTP_AUTH_NONE, PRS_HTTP_AUTH_BASIC, PRS_HTTP_AUTH_NTLM, PRS_HTTP_AUTH_KERBEROS, PRS_HTTP_AUTH_DIGEST, ITEM_AUTHTYPE_PASSWORD, ITEM_AUTHTYPE_PUBLICKEY]),
+            'get_value'				=> 'in 0,1',
+            'eol'					=> 'in '.implode(',', [PRS_EOL_LF, PRS_EOL_CRLF]),
+            'headers'				=> 'array',
+            'proxy_hostid'			=> 'id',
+            'hostid'				=> 'db hosts.hostid',
+            'http_authtype'			=> 'in '.implode(',', [PRS_HTTP_AUTH_NONE, PRS_HTTP_AUTH_BASIC, PRS_HTTP_AUTH_NTLM, PRS_HTTP_AUTH_KERBEROS, PRS_HTTP_AUTH_DIGEST, ITEM_AUTHTYPE_PASSWORD, ITEM_AUTHTYPE_PUBLICKEY]),
+            'http_password'			=> 'string',
+            'http_proxy'			=> 'string',
+            'http_username'			=> 'string',
+            'flags'					=> 'in '. implode(',', [PRS_FLAG_DISCOVERY_NORMAL, PRS_FLAG_DISCOVERY_RULE, PRS_FLAG_DISCOVERY_PROTOTYPE, PRS_FLAG_DISCOVERY_CREATED]),
+            'follow_redirects'		=> 'in 0,1',
+            'key'					=> 'string',
+            'interface'				=> 'array',
+            'ipmi_sensor'			=> 'string',
+            'item_type'				=> 'in '.implode(',', [ITEM_TYPE_PERSEUS, ITEM_TYPE_TRAPPER, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL, ITEM_TYPE_PERSEUS_ACTIVE, ITEM_TYPE_HTTPTEST, ITEM_TYPE_EXTERNAL, ITEM_TYPE_DB_MONITOR, ITEM_TYPE_IPMI, ITEM_TYPE_SSH, ITEM_TYPE_TELNET, ITEM_TYPE_CALCULATED, ITEM_TYPE_JMX, ITEM_TYPE_SNMPTRAP, ITEM_TYPE_DEPENDENT, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_SNMP, ITEM_TYPE_SCRIPT]),
+            'jmx_endpoint'			=> 'string',
+            'macros'				=> 'array',
+            'output_format'			=> 'in '.implode(',', [HTTPCHECK_STORE_RAW, HTTPCHECK_STORE_JSON]),
+            'params_ap'				=> 'string',
+            'params_es'				=> 'string',
+            'params_f'				=> 'string',
+            'script'				=> 'string',
+            'password'				=> 'string',
+            'post_type'				=> 'in '.implode(',', [PRS_POSTTYPE_RAW, PRS_POSTTYPE_JSON, PRS_POSTTYPE_XML]),
+            'posts'					=> 'string',
+            'prev_time'				=> 'string',
+            'prev_value'			=> 'string',
+            'privatekey'			=> 'string',
+            'publickey'				=> 'string',
+            'query_fields'			=> 'array',
+            'parameters'			=> 'array',
+            'request_method'		=> 'in '.implode(',', [HTTPCHECK_REQUEST_GET, HTTPCHECK_REQUEST_POST, HTTPCHECK_REQUEST_PUT, HTTPCHECK_REQUEST_HEAD]),
+            'retrieve_mode'			=> 'in '.implode(',', [HTTPTEST_STEP_RETRIEVE_MODE_CONTENT, HTTPTEST_STEP_RETRIEVE_MODE_HEADERS, HTTPTEST_STEP_RETRIEVE_MODE_BOTH]),
+            'show_final_result'		=> 'in 0,1',
+            'snmp_oid'				=> 'string',
+            'steps'					=> 'array',
+            'ssl_cert_file'			=> 'string',
+            'ssl_key_file'			=> 'string',
+            'ssl_key_password'		=> 'string',
+            'status_codes'			=> 'string',
+            'test_type'				=> 'required|in '.implode(',', [self::PRS_TEST_TYPE_ITEM, self::PRS_TEST_TYPE_ITEM_PROTOTYPE, self::PRS_TEST_TYPE_LLD]),
+            'time_change'			=> 'int32',
+            'timeout'				=> 'string',
+            'username'				=> 'string',
+            'url'					=> 'string',
+            'value'					=> 'string',
+            'value_type'			=> 'in '.implode(',', [ITEM_VALUE_TYPE_UINT64, ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG, ITEM_VALUE_TYPE_TEXT]),
+            'valuemapid'			=> 'id',
+            'verify_host'			=> 'in 0,1',
+            'verify_peer'			=> 'in 0,1',
+            'not_supported'			=> 'in 1'
+        ];
+
+        $ret = $this->validateInput($fields);
+        if ($ret) {
+            $testable_item_types = self::getTestableItemTypes($this->getInput('hostid', '0'));
+            $this->get_value_from_host = (bool) $this->getInput('get_value');
+            $this->item_type = $this->hasInput('item_type') ? $this->getInput('item_type') : -1;
+            $this->test_type = $this->getInput('test_type');
+            $this->is_item_testable = in_array($this->item_type, $testable_item_types);
+
+            $interface = $this->getInput('interface', []);
+            $steps = $this->getInput('steps', []);
+            $prepr_types = prs_objectValues($steps, 'type');
+            $this->use_prev_value = (count(array_intersect($prepr_types, self::$preproc_steps_using_prev_value)) > 0);
+            $this->show_final_result = ($this->getInput('show_final_result') == 1);
+
+
+            // If 'get value from host' is checked, check if key is valid for item types it's mandatory.
+            if ($this->get_value_from_host && in_array($this->item_type, $this->item_types_has_key_mandatory)) {
+                $key = $this->getInput('key', '');
+
+                /*
+                 * VMware and icmpping simple checks are not supported.
+                 * This normally cannot be achieved from UI so no need for error message.
+                 */
+                if ($this->item_type == ITEM_TYPE_SIMPLE
+                    && (substr($key, 0, 7) === 'vmware.' || substr($key, 0, 8) === 'icmpping')) {
+                    $this->get_value_from_host = false;
+                    $ret = false;
+                }
+                else {
+                    $item_key_parser = new CItemKey();
+
+                    if ($item_key_parser->parse($key) != CParser::PARSE_SUCCESS) {
+                        error(t('zapi', 'Incorrect value for field "{attribute}", {error}.', [
+                            'attribute' =>  'key_',
+                            'error' => $item_key_parser->getError()
+                        ]));
+                        $ret = false;
+                    }
+                }
+            }
+
+            // Test if item is testable and check interface properties.
+            if ($this->get_value_from_host && !$this->is_item_testable) {
+                error(t('zapi', 'Test of {name} items is not supported.', [
+                    'name' =>  ItemHelper::itemtype2str($this->item_type),
+                ]));
+                $ret = false;
+            }
+            elseif ($this->get_value_from_host && array_key_exists($this->item_type, $this->items_require_interface)) {
+                if (!$this->validateInterface($interface)) {
+                    $ret = false;
+                }
+            }
+
+            // Check preprocessing steps.
+            if ($steps) {
+                if ($this->test_type == self::PRS_TEST_TYPE_LLD) {
+                    $lld_instance = new DiscoverRuleAssist();
+                    $steps_validation_response = $lld_instance->validateItemPreprocessingSteps($steps);
+
+                    if ($steps_validation_response !== true) {
+                        error($steps_validation_response);
+                        $ret = false;
+                    }
+                }
+                else {
+                    switch ($this->test_type) {
+                        case self::PRS_TEST_TYPE_ITEM:
+                            $api_input_rules = ItemAssist::getPreprocessingValidationRules();
+                            break;
+
+                        case self::PRS_TEST_TYPE_ITEM_PROTOTYPE:
+                            $api_input_rules = ItemPrototypeAssist::getPreprocessingValidationRules();
+                            break;
+                    }
+
+                    $stepsData = ['steps' => $steps];
+                    $bool = ValidateHelper::validateObject($stepsData, ['steps' => $api_input_rules], ['_path' => '/'], $error);
+                    if (!$bool) {
+                        self::exception(60750001, $error);
+                        $ret = false;
+                    }
+                }
+            }
+
+            // Check previous time.
+            if ($this->use_prev_value && $this->getInput('prev_value', '') !== '') {
+                $prev_time = $this->getInput('prev_time', '');
+
+                $relative_time_parser = new CRelativeTimeParser();
+                if ($relative_time_parser->parse($prev_time) != CParser::PARSE_SUCCESS) {
+                    error(t('zapi', 'Incorrect value for field "{attribute}", {error}.', [
+                        'attribute' =>  t('zapi', 'Prev. time'),
+                        'error' => t('zapi', 'a relative time is expected')
+                    ]));
+                    $ret = false;
+                }
+                else {
+                    $tokens = $relative_time_parser->getTokens();
+                    if (count($tokens) > 1) {
+                        error(t('zapi', 'Incorrect value for field "{attribute}", {error}.', [
+                            'attribute' =>  t('zapi', 'Prev. time'),
+                            'error' => t('zapi', 'only one time unit is allowed')
+                        ]));
+                    }
+                    elseif ($tokens && $tokens[0]['type'] == CRelativeTimeParser::PRS_TOKEN_PRECISION) {
+                        error(t('zapi', 'Incorrect value for field "{attribute}", {error}.', [
+                            'attribute' =>  t('zapi', 'Prev. time'),
+                            'error' => t('zapi', 'a relative time is expected')
+                        ]));
+                    }
+                    elseif ($tokens && !in_array($tokens[0]['suffix'], self::$supported_time_suffixes)) {
+                        error(t('zapi', 'Incorrect value for field "{attribute}", {error}.', [
+                            'attribute' =>  t('zapi', 'Prev. time'),
+                            'error' => t('zapi', 'unsupported time suffix')
+                        ]));
+                    }
+                    elseif ($tokens && $tokens[0]['sign'] !== '-') {
+                        error(t('zapi', 'Incorrect value for field "{attribute}", {error}.', [
+                            'attribute' =>  t('zapi', 'Prev. time'),
+                            'error' => t('zapi', 'should be less than current time')
+                        ]));
+                    }
+                }
+            }
+
+            if ($this->item_type == ITEM_TYPE_CALCULATED) {
+                $expression_parser = new CExpressionParser([
+                    'usermacros' => true,
+                    'lldmacros' => ($this->getInput('test_type') == self::PRS_TEST_TYPE_ITEM_PROTOTYPE),
+                    'calculated' => true,
+                    'host_macro' => true,
+                    'empty_host' => true
+                ]);
+
+                if ($expression_parser->parse($this->getInput('params_f')) != CParser::PARSE_SUCCESS) {
+                    error(t('zapi', 'Incorrect value for field "{attribute}", {error}.', [
+                        'attribute' =>  t('zapi', 'Formula'),
+                        'error' => $expression_parser->getError()
+                    ]));
+                }
+                else {
+                    $expression_validator = new CExpressionValidator([
+                        'usermacros' => true,
+                        'lldmacros' => ($this->getInput('test_type') == self::PRS_TEST_TYPE_ITEM_PROTOTYPE),
+                        'calculated' => true
+                    ]);
+
+                    if (!$expression_validator->validate($expression_parser->getResult()->getTokens())) {
+                        error(t('zapi', 'Incorrect value for field "{attribute}", {error}.', [
+                            'attribute' =>  t('zapi', 'Formula'),
+                            'error' => $expression_validator->getError()
+                        ]));
+                    }
+                }
+            }
+        }
+
+        if ($messages = get_and_clear_messages()) {
+            self::exception(60750001, implode("\r\n", array_column($messages, 'message')));
+        }
+
+        return $ret;
+    }
+
+    protected function send()
+    {
+        $PRS_SERVER = env('PERSEUS_SERVER');
+        $PRS_SERVER_PORT = env('PERSEUS_SERVER_PORT');
+        /*
+         * Define values used to test preprocessing steps.
+         * Steps array can be empty if only value conversion is tested.
+         */
+        $preproc_test_data = [
+            'value' => $this->getInput('value', ''),
+            'steps' => $this->getInput('steps', []),
+            'single' => !$this->show_final_result,
+            'state' => 0
+        ];
+
+        // Get previous value and time.
+        if ($this->use_prev_value) {
+            $prev_value = $this->getInput('prev_value', '');
+            $prev_time = $this->getInput('prev_time', '');
+
+            if ($prev_value !== '' || $prev_time !== '') {
+                $preproc_test_data['history'] = [
+                    'value' => $prev_value,
+                    'timestamp' => $prev_time
+                ];
+            }
+        }
+
+        $output = [
+            'steps' => [],
+            'user' => [
+                'debug_mode' => YII_DEBUG
+            ]
+        ];
+
+        $valuemap = ($this->getInput('valuemapid', 0) != 0)
+            ? ValueMapHelper::getValueMappings([
+                'output' => [],
+                'selectMappings' => ['type', 'newvalue', 'value'],
+                'valuemapids' => $this->getInput('valuemapid')
+            ])
+            : [];
+
+        // Get value from host.
+        if ($this->get_value_from_host) {
+            // Get post data for particular item type.
+            $item_test_data = $this->getItemTestProperties($this->getInputAll(), true);
+
+            // Apply effective macros values to properties.
+            $item_test_data = $this->resolveItemPropertyMacros($item_test_data);
+
+            // Rename fields according protocol.
+            $item_test_data = CArrayHelper::renameKeys($item_test_data, [
+                'params_ap' => 'params',
+                'params_es' => 'params',
+                'params_f' => 'params',
+                'script' => 'params',
+                'http_username' => 'username',
+                'http_password' => 'password',
+                'http_authtype' => 'authtype',
+                'item_type' => 'type'
+            ]);
+
+            if (array_key_exists('headers', $item_test_data)) {
+                $item_test_data['headers'] = $this->transformHeaderFields($item_test_data['headers']);
+            }
+
+            if (array_key_exists('query_fields', $item_test_data)) {
+                $item_test_data['query_fields'] = $this->transformQueryFields($item_test_data['query_fields']);
+            }
+
+            if (array_key_exists('parameters', $item_test_data)) {
+                $item_test_data['parameters'] = $this->transformParametersFields($item_test_data['parameters']);
+            }
+
+            if ($item_test_data['type'] == ITEM_TYPE_CALCULATED) {
+                $item_test_data['host']['hostid'] = $this->getInput('hostid');
+            }
+
+            // Only non-empty fields need to be sent to server.
+            $item_test_data = $this->unsetEmptyValues($item_test_data);
+
+            /*
+             * Server will turn off status code check if field value is empty. If field is not present, then server will
+             * default to check if status code is 200.
+             */
+            if ($this->item_type == ITEM_TYPE_HTTPAGENT && !array_key_exists('status_codes', $item_test_data)) {
+                $item_test_data['status_codes'] = '';
+            }
+
+            if ($this->item_type != ITEM_TYPE_CALCULATED) {
+                unset($item_test_data['value_type']);
+            }
+
+            // Send test to be executed on Perseus server.
+            $server = new MonitorServer($PRS_SERVER, $PRS_SERVER_PORT,
+                timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::CONNECT_TIMEOUT)),
+                timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::ITEM_TEST_TIMEOUT)), PRS_SOCKET_BYTES_LIMIT
+            );
+            $result = $server->testItem($item_test_data, (new ZabbixServer())->getToken());
+
+            // Handle the response.
+            if ($result === false) {
+                error($server->getError());
+            }
+            elseif (is_array($result)) {
+                if (array_key_exists('result', $result)) {
+                    // Move current value to previous value field.
+                    if ($this->use_prev_value && $preproc_test_data['value'] !== '') {
+                        $preproc_test_data['history']['value'] = $preproc_test_data['value'];
+                        $preproc_test_data['history']['timestamp'] = $this->getPrevTime();
+
+                        $output['prev_value'] = $preproc_test_data['value'];
+                        $output['prev_time'] = $preproc_test_data['history']['timestamp'];
+                    }
+
+                    // Apply new value to preprocessing test.
+                    $preproc_test_data['value'] = $result['result'];
+                    $output['value'] = $result['result'];
+                    $output['eol'] = (strstr($result['result'], "\r\n") === false) ? PRS_EOL_LF : PRS_EOL_CRLF;
+                }
+
+                if (array_key_exists('error', $result) && $result['error'] !== '') {
+                    if ($preproc_test_data['steps']
+                        && $preproc_test_data['steps'][0]['type'] == PRS_PREPROC_VALIDATE_NOT_SUPPORTED) {
+                        $preproc_test_data['state'] = 1;
+                    }
+                    else {
+                        error($result['error']);
+                    }
+                }
+            }
+
+            if ($messages = get_and_clear_messages()) {
+                self::exception(60750001, implode("\r\n", array_column($messages, 'message')));
+            }
+        }
+        else {
+            $preproc_test_data['state'] = $this->getInput('not_supported', 0);
+        }
+
+        // Test preprocessing steps.
+        $this->eol = parent::getInput('eol', PRS_EOL_LF);
+
+        if (!array_key_exists('error', $output)) {
+            $preproc_test_data['value_type'] = $this->getInput('value_type', ITEM_VALUE_TYPE_STR);
+
+            $preproc_test_data['steps'] = $this->resolvePreprocessingStepMacros($preproc_test_data['steps']);
+
+            // Send test details to Perseus server.
+            $server = new MonitorServer($PRS_SERVER, $PRS_SERVER_PORT,
+                timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::CONNECT_TIMEOUT)),
+                timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::ITEM_TEST_TIMEOUT)), PRS_SOCKET_BYTES_LIMIT
+            );
+            $result = $server->testPreprocessingSteps($preproc_test_data, (new ZabbixServer())->getToken());
+
+            if ($result === false) {
+                error($server->getError());
+            }
+            elseif (is_array($result)) {
+                $test_failed = false;
+                $test_outcome = null;
+
+                foreach ($preproc_test_data['steps'] as $i => &$step) {
+                    if ($test_failed) {
+                        // If test is failed, processing steps are skipped from results.
+                        unset($preproc_test_data['steps'][$i]);
+                        continue;
+                    }
+                    elseif (array_key_exists($i, $result['steps'])) {
+                        $step += $result['steps'][$i];
+
+                        if (array_key_exists('error', $step)) {
+                            // If error happened and no value is set, frontend shows label 'No value'.
+                            if (!array_key_exists('action', $step) || $step['action'] != PRS_PREPROC_FAIL_SET_VALUE) {
+                                unset($step['result']);
+                                $test_failed = true;
+                            }
+                        }
+                        elseif ($step['type'] == PRS_PREPROC_VALIDATE_NOT_SUPPORTED) {
+                            $step['result'] = $preproc_test_data['value'];
+                        }
+                    }
+
+                    unset($step['type'], $step['params'], $step['error_handler'], $step['error_handler_params']);
+
+                    // Latest executed step due to the error or end of preprocessing.
+                    $test_outcome = $step + ['action' => PRS_PREPROC_FAIL_DEFAULT];
+                }
+                unset($step);
+
+                if (array_key_exists('error', $result)) {
+                    error($result['error']);
+                }
+                elseif ($this->show_final_result) {
+                    if (array_key_exists('result', $result)) {
+                        $output['final'] = [
+                            'action' => t('zapi', 'Result converted to {type}', [
+                                    'type' => ItemHelper::itemValueTypeString($preproc_test_data['value_type'])
+                                ]
+                            ),
+                            'result' => $result['result']
+                        ];
+
+                        if ($valuemap) {
+                            $output['mapped_value'] = ValueMapHelper::applyValueMap($preproc_test_data['value_type'],
+                                $result['result'], $valuemap
+                            );
+                        }
+                    }
+                    elseif (array_key_exists('error', $result)) {
+                        $output['final'] = [
+                            'action' => ($test_outcome['action'] == PRS_PREPROC_FAIL_SET_ERROR)
+                                ? _('Set error to')
+                                : '',
+                            'error' => $result['error']
+                        ];
+                    }
+
+//                    if ($output['final']['action'] !== '') {
+//                        $output['final']['action'] = $output['final']['action'];
+//                    }
+                }
+
+                $output['steps'] = $preproc_test_data['steps'];
+            }
+
+            if ($messages = get_and_clear_messages()) {
+                self::exception(60750001, implode("\r\n", array_column($messages, 'message')));
+            }
+        }
+        return $output;
+    }
+}

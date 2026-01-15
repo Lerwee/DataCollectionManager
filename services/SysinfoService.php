@@ -1,6 +1,6 @@
 <?php
 
-namespace app\customs\zabbix\services;
+namespace app\customs\zapi\services;
 
 use app\common\base\BaseService;
 use app\common\helpers\ZabbixHelper;
@@ -8,15 +8,17 @@ use app\modules\libzbx\components\ZabbixServer;
 use app\modules\libzbx\models\Classification;
 use Yii;
 
-class SysinfoService extends BaseService
+class SysInfoService extends BaseService
 {
+    protected $category = 'zapi';
     /**
      * delegate
      * @return array
      */
     public function delegate()
     {
-        $server = new ZabbixServer();
+        [$host, $port] = function_exists("get_perseus_server_address") ? get_perseus_server_address() : $this->getServerAddress();
+        $server = new ZabbixServer(['host' => $host, 'port' => $port]);
         $summary = $this->getSummary($server);
 
         return [
@@ -39,21 +41,20 @@ class SysinfoService extends BaseService
      */
     protected function prepareHostSummary($summary)
     {
-        $category = $this->module->id ?? 'zbx';
         return [
-            'label'    => Yii::t($category, 'Host'),
+            'label'    => Yii::t($this->category, 'Host'),
             'value'    => $summary['hosts_count'],
             'status'   => [
                 [
-                    'label' => Yii::t($category, 'enabled'),
+                    'label' => Yii::t($this->category, 'enabled'),
                     'value' => $summary['hosts_count_monitored'],
                 ],
                 [
-                    'label' => Yii::t($category, 'disabled'),
+                    'label' => Yii::t($this->category, 'disabled'),
                     'value' => $summary['hosts_count_not_monitored'],
                 ],
                 [
-                    'label' => Yii::t($category, 'Template'),
+                    'label' => Yii::t($this->category, 'Template'),
                     'value' => $summary['hosts_count_template'],
                 ],
             ],
@@ -68,21 +69,20 @@ class SysinfoService extends BaseService
      */
     protected function prepareItemSummary($summary)
     {
-        $category = $this->module->id ?? 'zbx';
         return [
-            'label'  => Yii::t($category, 'Number of items'),
+            'label'  => Yii::t($this->category, 'Number of items'),
             'value'  => $summary['items_count'],
             'status' => [
                 [
-                    'label' => Yii::t($category, 'enabled'),
+                    'label' => Yii::t($this->category, 'enabled'),
                     'value' => $summary['items_count_monitored'],
                 ],
                 [
-                    'label' => Yii::t($category, 'disabled'),
+                    'label' => Yii::t($this->category, 'disabled'),
                     'value' => $summary['items_count_disabled'],
                 ],
                 [
-                    'label' => Yii::t($category, 'not supported'),
+                    'label' => Yii::t($this->category, 'not supported'),
                     'value' => $summary['items_count_not_supported'],
                 ],
             ],
@@ -96,27 +96,26 @@ class SysinfoService extends BaseService
      */
     protected function prepareTriggerSummary($summary)
     {
-        $category = $this->module->id ?? 'zbx';
         return [
-            'label'  => Yii::t($category, 'Number of triggers'),
+            'label'  => Yii::t($this->category, 'Number of triggers'),
             'value'  => $summary['triggers_count'],
             'status' => [
                 [
-                    'label' => Yii::t($category, 'disabled'),
+                    'label' => Yii::t($this->category, 'disabled'),
                     'value' => $summary['triggers_count_enabled'],
                 ],
                 [
-                    'label' => Yii::t($category, 'enabled'),
+                    'label' => Yii::t($this->category, 'enabled'),
                     'value' => $summary['triggers_count_disabled'],
                 ],
             ],
             'state'  => [
                 [
-                    'label' => Yii::t($category, 'problem'),
+                    'label' => Yii::t($this->category, 'problem'),
                     'value' => $summary['triggers_count_on'],
                 ],
                 [
-                    'label' => Yii::t($category, 'ok'),
+                    'label' => Yii::t($this->category, 'ok'),
                     'value' => $summary['triggers_count_off'],
                 ],
             ],
@@ -132,14 +131,13 @@ class SysinfoService extends BaseService
      */
     protected function prepareServerSummary(ZabbixServer $server, $summary)
     {
-        $category = $this->module->id ?? 'zbx';
         return [
-            'label'  => Yii::t($category, 'Zabbix Server'),
+            'label'  => Yii::t($this->category, 'Perseus Server'),
             'value'  => $server->port ? $server->host . ':' . $server->port : $server->host,
             'status' => !empty($summary['is_running']),
             'version' => [
-                'label' => Yii::t($category, 'Version'),
-                'value' => 'V' . ZabbixHelper::getVersion(false),
+                'label' => Yii::t($this->category, 'Version'),
+                'value' => function_exists('get_latest_version') ? get_latest_version() : 'V' . APP_VERSION,
             ],
 
         ];
@@ -153,9 +151,8 @@ class SysinfoService extends BaseService
      */
     protected function prepareLatestSummary($summary)
     {
-        $category = $this->module->id ?? 'zbx';
         return [
-            'label' => Yii::t($category, 'Required server performance, new values per second'),
+            'label' => Yii::t($this->category, 'Required server performance, new values per second'),
             'value' => round($summary['vps_total'], 2),
         ];
     }
@@ -200,10 +197,16 @@ class SysinfoService extends BaseService
             'users_count'               => 0,
             'users_online'              => 0,
             'vps_total'                 => 0,
+            'version'                   => 'V' . ZabbixHelper::getVersion(false),
         ];
 
         if (empty($status)) {
             return $data;
+        }
+
+        // servers
+        if (array_key_exists('server stats', $status)) {
+            isset($status['server stats']['version']) && $data['version'] = 'V' . $status['server stats']['version'];
         }
 
         // hosts
@@ -281,11 +284,11 @@ class SysinfoService extends BaseService
         // users
         foreach ($status['user stats'] as $stats) {
             switch ($stats['attributes']['status']) {
-                case 0: // ZBX_SESSION_ACTIVE
+                case 0: // PRS_SESSION_ACTIVE
                     $data['users_online'] += $stats['count'];
                     break;
 
-                case 1: // ZBX_SESSION_PASSIVE
+                case 1: // PRS_SESSION_PASSIVE
                     $data['users_count'] += $stats['count'];
                     break;
             }
@@ -303,5 +306,42 @@ class SysinfoService extends BaseService
             }
         }
         return $data;
+    }
+
+    /**
+     * 服务器地址
+     * 
+     * @return array
+     * @deprecated since 8.0 use [[get_perseus_server_address]] instead it
+     */
+    public function getServerAddress(): array
+    {
+        $address = env('ZABBIX_SERVER', '127.0.0.1');
+        $port    = env('ZABBIX_SERVER_PORT', 10051);
+        if (version_compare(ZabbixHelper::getVersion(), '6.0', '<')) {
+            return [$address, $port];
+        }
+
+        $query = new \yii\db\Query();
+        $query->from('ha_node')->select(['address', 'port', 'status']);
+        $query->orderBy(['lastaccess' => SORT_DESC]);
+        $nodes = $query->all();
+
+        if (count($nodes) == 1) {
+            if ($nodes[0]['address'] != 'localhost' && $address != $nodes[0]['address']) {
+                $address = $nodes[0]['address'];
+                $port = $nodes[0]['port'];
+            }
+        } else {
+            foreach ($nodes as $node) {
+                if ($node['status'] == 3) {
+                    $address = $node['address'];
+                    $port = $node['port'];
+                    break;
+                }
+            }
+        }
+
+        return [$address, $port];
     }
 }

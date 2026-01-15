@@ -1,0 +1,172 @@
+<?php
+
+return [
+    'key' => 'mediatypeid',
+    'fields' => [
+        'mediatypeid' => [
+            'null' => false,
+            'type' => 'id',
+            'length' => 20,
+        ],
+        'type' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'name' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 100,
+            'default' => '',
+        ],
+        'smtp_server' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'smtp_helo' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'smtp_email' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'exec_path' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'gsm_modem' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'username' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'passwd' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'status' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '1',
+        ],
+        'smtp_port' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '25',
+        ],
+        'smtp_security' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'smtp_verify_peer' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'smtp_verify_host' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'smtp_authentication' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'maxsessions' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '1',
+        ],
+        'maxattempts' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '3',
+        ],
+        'attempt_interval' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 32,
+            'default' => '10s',
+        ],
+        'content_type' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '1',
+        ],
+        'script' => [
+            'null' => false,
+            'type' => 'nclob',
+            'default' => '',
+        ],
+        'timeout' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 32,
+            'default' => '30s',
+        ],
+        'process_tags' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'show_event_menu' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+        'event_menu_url' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 2048,
+            'default' => '',
+        ],
+        'event_menu_name' => [
+            'null' => false,
+            'type' => 'char',
+            'length' => 255,
+            'default' => '',
+        ],
+        'description' => [
+            'null' => false,
+            'type' => 'text',
+            'default' => '',
+        ],
+        'provider' => [
+            'null' => false,
+            'type' => 'int',
+            'length' => 10,
+            'default' => '0',
+        ],
+    ],
+];
