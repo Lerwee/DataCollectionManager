@@ -1,62 +1,22 @@
 <?php
 
-namespace app\customs\zabbix\controllers;
+namespace app\customs\zapi\controllers;
 
-use app\customs\zabbix\services\SysinfoService;
+use app\common\base\BaseController;
+use app\customs\zapi\services\SysInfoService;
 use Yii;
 use yii\web\Response;
 
-class SiteController extends Controller
+class SiteController extends BaseController
 {
-    /**
-     * {@inheritDoc}
-     */
-    public $enableHacker = true;
-
-    /**
-     * {@inheritDoc}
-     */
-    public function actions()
-    {
-        $actions = parent::actions();
-        if (isset($actions[$this->id])) {
-            unset($actions[$this->id]);
-        }
-        return $actions;
-    }
 
     /**
      * 系统信息
      *
      * @return Response
      */
-    public function actionSysinfo()
+    public function actionInfo()
     {
-        return $this->success(SysinfoService::instance()->delegate());
-    }
-
-    /**
-     * 路由解析
-     *
-     * @return Response
-     */
-    public function actionParser()
-    {
-        $alias = (string) strtolower(Yii::$app->request->get('alias'));
-        $controllerClass = __NAMESPACE__ . '\\' . ucfirst($alias) . 'Controller';
-        if (!class_exists($controllerClass)) {
-            $msg = Yii::t('yii', 'Invalid data received for parameter "{param}".', [
-                'param' => 'alias'
-            ]);
-            return $this->error(10000404, $msg);
-        }
-        $class = new $controllerClass($alias, $this->module);
-        $class->enableLoader = false;
-        $url = '/'. $this->module->id . '/' . $alias . '/' . $class->defaultAction;
-        return $this->success([
-            'alias' => $alias,
-            'title' => Yii::t($this->module->id, ucfirst($alias)),
-            'url' => $url
-        ]);
+        return $this->success(SysInfoService::instance()->delegate());
     }
 }
