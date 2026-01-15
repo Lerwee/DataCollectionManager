@@ -1,31 +1,19 @@
 <?php
 
-namespace app\customs\zabbix;
+namespace app\customs\zapi;
 
 use app\common\base\BaseModule;
 
+//模块类型，方便开发
+defined('RESOURCE_ZAPI') or define('RESOURCE_ZAPI', 6075);
+
 /**
- * Zabbix module
+ * Zapi module
  */
 class Module extends BaseModule
 {
     /**
      * {@inheritdoc}
      */
-    public $controllerNamespace = 'app\customs\zabbix\controllers';
-    
-    /**
-     * {@inheritdoc}
-     */
-    public $layout = 'main';
-
-    /**
-     * {@inheritdoc}
-     */
-    public function afterInstall()
-    {
-        parent::afterInstall();
-        $syncer = new \app\customs\zabbix\syncers\AssetSyncer();
-        $syncer->make();
-    }
+    public $controllerNamespace = 'app\customs\zapi\controllers';
 }
