@@ -1,0 +1,344 @@
+<?php declare(strict_types = 0);
+namespace app\customs\zapi\common\import\converters;
+
+use app\customs\zapi\common\xml\CXmlConstantName;
+use app\customs\zapi\common\parsers\results\CExpressionParserResult;
+use app\customs\zapi\common\parsers\CSimpleIntervalParser;
+use app\customs\zapi\common\parsers\CExpressionParser;
+use app\customs\zapi\common\parsers\CParser;
+use app\customs\zapi\common\parsers\CHistFunctionParser;
+
+
+/**
+ * Converter for converting import data from 5.4 to 6.0.
+ */
+class C54ImportConverter extends CConverter {
+
+	/**
+	 * Convert import data from 5.4 to 6.0 version.
+	 *
+	 * @param array $data
+	 *
+	 * @return array
+	 */
+	public function convert(array $data): array {
+		$data['perseus_export']['version'] = '6.0';
+
+		if (array_key_exists('hosts', $data['perseus_export'])) {
+			$data['perseus_export']['hosts'] = self::convertHosts($data['perseus_export']['hosts']);
+		}
+
+		if (array_key_exists('templates', $data['perseus_export'])) {
+			$data['perseus_export']['templates'] = self::convertTemplates($data['perseus_export']['templates']);
+		}
+
+		if (array_key_exists('graphs', $data['perseus_export'])) {
+			$data['perseus_export']['graphs'] = self::convertGraphs($data['perseus_export']['graphs']);
+		}
+
+		if (array_key_exists('maps', $data['perseus_export'])) {
+			$data['perseus_export']['maps'] = self::convertMaps($data['perseus_export']['maps']);
+		}
+
+		if (array_key_exists('media_types', $data['perseus_export'])) {
+			$data['perseus_export']['media_types'] = self::convertMediaTypes($data['perseus_export']['media_types']);
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Convert function macros "{host:key.func(<param>)}" to expression macros "{?func(/host/key<, param>)}".
+	 *
+	 * @static
+	 *
+	 * @param string $text
+	 *
+	 * @return string
+	 */
+	private static function convertFunctionMacros(string $text): string {
+		return (new C54SimpleMacroConverter())->convert($text);
+	}
+
+	/**
+	 * Convert hosts.
+	 *
+	 * @static
+	 *
+	 * @param array $hosts
+	 *
+	 * @return array
+	 */
+	private static function convertHosts(array $hosts): array {
+		foreach ($hosts as &$host) {
+			if (array_key_exists('items', $host)) {
+				$host['items'] = self::convertItems($host['items']);
+			}
+
+			if (array_key_exists('discovery_rules', $host)) {
+				$host['discovery_rules'] = self::convertDiscoveryRules($host['discovery_rules']);
+			}
+		}
+		unset($host);
+
+		return $hosts;
+	}
+
+	/**
+	 * Convert templates.
+	 *
+	 * @static
+	 *
+	 * @param array $templates
+	 *
+	 * @return array
+	 */
+	private static function convertTemplates(array $templates): array {
+		foreach ($templates as &$template) {
+			if (array_key_exists('items', $template)) {
+				$template['items'] = self::convertItems($template['items']);
+			}
+
+			if (array_key_exists('discovery_rules', $template)) {
+				$template['discovery_rules'] = self::convertDiscoveryRules($template['discovery_rules']);
+			}
+		}
+		unset($template);
+
+		return $templates;
+	}
+
+	/**
+	 * Convert items.
+	 *
+	 * @static
+	 *
+	 * @param array       $items
+	 *
+	 * @return array
+	 */
+	private static function convertItems(array $items): array {
+		foreach ($items as &$item) {
+			$item += ['type' => CXmlConstantName::PERSEUS_PASSIVE];
+
+			if ($item['type'] === CXmlConstantName::CALCULATED && array_key_exists('params', $item)) {
+				$item['params'] = self::convertCalcItemFormula($item['params']);
+			}
+
+			if (array_key_exists('preprocessing', $item)) {
+				$item['preprocessing'] = self::convertPreprocessingSteps($item['preprocessing']);
+			}
+		}
+		unset($item);
+
+		return $items;
+	}
+
+	/**
+	 * Convert preprocessing steps.
+	 *
+	 * @static
+	 *
+	 * @param array $preprocessing_steps
+	 *
+	 * @return array
+	 */
+	private static function convertPreprocessingSteps(array $preprocessing_steps): array {
+		foreach ($preprocessing_steps as &$preprocessing_step) {
+			if ($preprocessing_step['type'] === CXmlConstantName::PROMETHEUS_PATTERN
+					&& count($preprocessing_step['parameters']) === 2) {
+				$preprocessing_step['parameters'][2] = $preprocessing_step['parameters'][1];
+				$preprocessing_step['parameters'][1] = ($preprocessing_step['parameters'][2] === '')
+					? PRS_PREPROC_PROMETHEUS_VALUE
+					: PRS_PREPROC_PROMETHEUS_LABEL;
+			}
+		}
+		unset($preprocessing_step);
+
+		return $preprocessing_steps;
+	}
+
+	/**
+	 * Convert discover rules.
+	 *
+	 * @param array $discovery_rules
+	 *
+	 * @return array
+	 */
+	private static function convertDiscoveryRules(array $discovery_rules): array {
+		foreach ($discovery_rules as &$discovery_rule) {
+			if (array_key_exists('graph_prototypes', $discovery_rule)) {
+				$discovery_rule['graph_prototypes'] = self::convertGraphs($discovery_rule['graph_prototypes']);
+			}
+
+			if (array_key_exists('item_prototypes', $discovery_rule)) {
+				$discovery_rule['item_prototypes'] = self::convertItemPrototypes($discovery_rule['item_prototypes']);
+			}
+		}
+		unset($discovery_rule);
+
+		return $discovery_rules;
+	}
+
+	/**
+	 * @param array  $item_prototypes
+	 *
+	 * @return array
+	 */
+	private static function convertItemPrototypes(array $item_prototypes): array {
+		foreach ($item_prototypes as &$item_prototype) {
+			$item_prototype += ['type' => CXmlConstantName::PERSEUS_PASSIVE];
+
+			if ($item_prototype['type'] === CXmlConstantName::CALCULATED
+					&& array_key_exists('params', $item_prototype)) {
+				$item_prototype['params'] = self::convertCalcItemFormula($item_prototype['params'], true);
+			}
+
+			if (array_key_exists('preprocessing', $item_prototype)) {
+				$item_prototype['preprocessing'] = self::convertPreprocessingSteps($item_prototype['preprocessing']);
+			}
+		}
+		unset($item_prototype);
+
+		return $item_prototypes;
+	}
+
+	/**
+	 * Removes useless 2nd parameter from last_foreach() functions if it is 0.
+	 *
+	 * @param string $formula
+	 * @param bool   $prototype
+	 *
+	 * @return string
+	 */
+	private static function convertCalcItemFormula(string $formula, bool $prototype = false): string {
+		$expression_parser = new CExpressionParser([
+			'usermacros' => true,
+			'lldmacros' => $prototype,
+			'calculated' => true,
+			'host_macro' => true,
+			'empty_host' => true
+		]);
+
+		$simple_interval_parser = new CSimpleIntervalParser(['with_year' => true]);
+
+		if ($expression_parser->parse($formula) != CParser::PARSE_SUCCESS) {
+			return $formula;
+		}
+
+		$tokens = $expression_parser
+			->getResult()
+			->getTokensOfTypes([CExpressionParserResult::TOKEN_TYPE_HIST_FUNCTION]);
+
+		foreach (array_reverse($tokens) as $token) {
+			if ($token['data']['function'] !== 'last_foreach' || count($token['data']['parameters']) != 2) {
+				continue;
+			}
+
+			if ($token['data']['parameters'][1]['type'] != CHistFunctionParser::PARAM_TYPE_PERIOD) {
+				continue;
+			}
+
+			$sec_num = $token['data']['parameters'][1]['data']['sec_num'];
+
+			if ($simple_interval_parser->parse($sec_num) != CParser::PARSE_SUCCESS) {
+				continue;
+			}
+
+			if (timeUnitToSeconds($sec_num, true) == 0) {
+				$pos = $token['data']['parameters'][1]['pos'];
+				$length = $token['data']['parameters'][1]['length'];
+				for ($lpos = $pos; $formula[$lpos] !== ','; $lpos--)
+					;
+				$rpos = strpos($formula, ')', $pos + $length);
+
+				$formula = substr_replace($formula, '', $lpos, $rpos - $lpos);
+			}
+		}
+
+		return $formula;
+	}
+
+	/**
+	 * Convert graphs.
+	 *
+	 * @static
+	 *
+	 * @param array $graphs
+	 *
+	 * @return array
+	 */
+	private static function convertGraphs(array $graphs): array {
+		foreach ($graphs as &$graph) {
+			$graph['name'] = self::convertFunctionMacros($graph['name']);
+		}
+		unset($graph);
+
+		return $graphs;
+	}
+
+	/**
+	 * Convert maps.
+	 *
+	 * @static
+	 *
+	 * @param array $maps
+	 *
+	 * @return array
+	 */
+	private static function convertMaps(array $maps): array {
+		foreach ($maps as &$map) {
+			$map['label_string_host'] = self::convertFunctionMacros($map['label_string_host']);
+			$map['label_string_map'] = self::convertFunctionMacros($map['label_string_map']);
+			$map['label_string_trigger'] = self::convertFunctionMacros($map['label_string_trigger']);
+			$map['label_string_hostgroup'] = self::convertFunctionMacros($map['label_string_hostgroup']);
+			$map['label_string_image'] = self::convertFunctionMacros($map['label_string_image']);
+
+			foreach ($map['selements'] as &$selement) {
+				$selement['label'] = self::convertFunctionMacros($selement['label']);
+			}
+			unset($selement);
+
+			foreach ($map['shapes'] as &$shape) {
+				$shape['text'] = self::convertFunctionMacros($shape['text']);
+			}
+			unset($shape);
+
+			foreach ($map['links'] as &$link) {
+				$link['label'] = self::convertFunctionMacros($link['label']);
+			}
+			unset($link);
+		}
+		unset($map);
+
+		return $maps;
+	}
+
+	/**
+	 * Convert media types.
+	 *
+	 * @static
+	 *
+	 * @param array $media_types
+	 *
+	 * @return array
+	 */
+	private static function convertMediaTypes(array $media_types): array {
+		foreach ($media_types as &$media_type) {
+			if (array_key_exists('message_templates', $media_type)) {
+				foreach ($media_type['message_templates'] as &$message_template) {
+					if (array_key_exists('subject', $message_template)) {
+						$message_template['subject'] = self::convertFunctionMacros($message_template['subject']);
+					}
+					if (array_key_exists('message', $message_template)) {
+						$message_template['message'] = self::convertFunctionMacros($message_template['message']);
+					}
+				}
+				unset($message_template);
+			}
+		}
+		unset($media_type);
+
+		return $media_types;
+	}
+}
