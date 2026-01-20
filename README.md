@@ -18,19 +18,19 @@
 
   - 兼容数十种协议，并支持基因技术自动适配，可满足信创和非信创软硬件监控采集，覆盖500+厂商，8000+设备型号。
     
-- Zabbix页面无缝嵌套
+- 向下兼容
 
-  - 支持在Zabbix Web界面内直接嵌入第三方系统页面（如运维平台、CMDB、自定义监控面板等），保持统一的用户操作体验。
+  - 支持对接第三方数据源，如Prometheus 、Cacti、Loki 、Telegraf 、OpenTelemetry 、 SkyWalking 、Zabbix等，保持统一的用户操作体验。
 
   - 提供安全的iframe集成方案，支持动态Token鉴权，确保数据访问的安全性。
 
 - 增强型API查询接口
 
-  - 代理Zabbix原生API能力，提供的数据查询接口，支持组合查询、批量获取监控数据，减少API调用次数。
+  - 代理Prometheus、Zabbix等原生API能力，提供的数据查询接口，支持组合查询、批量获取监控数据，减少API调用次数。
 
 - 权限与Session管理
 
-  - 保持与Zabbix用户权限体系一致，确保嵌套页面和API查询遵循Zabbix RBAC（基于角色的访问控制）。
+  - 保持与Prometheus、Zabbix等用户权限体系一致，确保嵌套页面和API查询遵循基于角色的访问控制。
   - 支持Session共享，避免重复登录，提升用户体验。
 
 ## 代码结构
